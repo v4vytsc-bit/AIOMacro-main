@@ -424,8 +424,8 @@ public class Utils {
         yaw = yaw * 180.0 / Math.PI;
 
         yaw += 90f;
-        SetPlayerLook.pitch = (int) pitch;
-        SetPlayerLook.yaw = (int) yaw;
+        SetPlayerLook.pitch = (float) pitch;
+        SetPlayerLook.yaw = SetPlayerLook.wrapYaw((float) yaw);
         SetPlayerLook.toggled = true;
     }
 

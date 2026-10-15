@@ -21,6 +21,9 @@ public class OneRow {
     @SubscribeEvent
     public void farmRow(@NotNull TickEvent.ClientTickEvent event) {
         if (MacroHandler.isMacroOn && MacroHandler.isOneRow) {
+            if (!MacroHandler.waitForLook()) {
+                return;
+            }
             if (endRow != null) {
                 System.out.println(Math.abs(endRow.xCoord - Main.mcPlayer.getPositionVector().xCoord));
                 if (Math.abs(endRow.xCoord - Main.mcPlayer.getPositionVector().xCoord) >= 0.8f

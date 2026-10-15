@@ -1,38 +1,39 @@
 package me.jacktym.aiomacro.features;
 
 import me.jacktym.aiomacro.Main;
-import me.jacktym.aiomacro.config.AIOMConfig;
 import me.jacktym.aiomacro.config.AIOMVigilanceConfig;
 import me.jacktym.aiomacro.util.Utils;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
+import java.util.Random;
+
 public class SetPlayerLook {
 
-    // Safely parse the text fields from AIOMConfig upon startup
-    public static int yaw = parseSafeInt(AIOMConfig.yawText, 0);
+    public static float yaw = AIOMVigilanceConfig.getYaw();
 
-    public static int pitch = parseSafeInt(AIOMConfig.pitchText, 0);
+    public static float pitch = AIOMVigilanceConfig.getPitch();
 
     public static boolean toggled = false;
 
-    // Safely parse the text fields whenever defaults are restored or reloaded
-    public static void setDefault() {
-        yaw = parseSafeInt(AIOMConfig.yawText, 0);
+    // How close (in degrees) the current look has to be to the target to count as correct.
+    private static final float LOOK_TOLERANCE = 0.01f;
 
-        pitch = parseSafeInt(AIOMConfig.pitchText, 0);
+    public static void setDefault() {
+        yaw = AIOMVigilanceConfig.getYaw();
+
+        pitch = AIOMVigilanceConfig.getPitch();
     }
 
-    // Helper method to prevent crashes if a non-number is typed
-    private static int parseSafeInt(String text, int fallback) {
-        try {
-            if (text == null || text.trim().isEmpty()) {
-                return fallback;
-            }
-            return Integer.parseInt(text.trim());
-        } catch (NumberFormatException e) {
-            return fallback;
+    // Wraps any angle into the range (-180, 180].
+    public static float wrapYaw(float yaw) {
+        yaw %= 360f;
+        if (yaw > 180f) {
+            yaw -= 360f;
+        } else if (yaw <= -180f) {
+            yaw += 360f;
         }
+        return yaw;
     }
 
     public static float fixStaticYaw(float yaw) {
@@ -60,99 +61,99 @@ public class SetPlayerLook {
     }
 
     public static boolean isYawLookCorrect() {
-        return fixStaticYaw(Main.mcPlayer.rotationYaw) - yaw == 0;
+        return Math.abs(wrapYaw(yaw - Main.mcPlayer.rotationYaw)) <= LOOK_TOLERANCE;
     }
 
     public static boolean isPitchLookCorrect() {
-        return Float.parseFloat(String.format("%.1f", Main.mcPlayer.rotationPitch)) - pitch == 0;
+        return Math.abs(pitch - Main.mcPlayer.rotationPitch) <= LOOK_TOLERANCE;
     }
 
     public static boolean isLookCorrect() {
         return isYawLookCorrect() && isPitchLookCorrect();
     }
 
-    public float fixYaw(float yaw) {
-        for (int i = 0; i < 10000; i++) {
-            if (yaw >= 0) {
-                if (yaw - i * 360 <= 180) {
-                    yaw = yaw - i * 360;
-                    if (yaw == -180) {
-                        yaw = 180;
-                    }
-                    return Float.parseFloat(String.format("%.1f", yaw));
-                }
-            } else {
-                if (yaw + i * 360 >= -180) {
-                    yaw = yaw + i * 360;
-                    if (yaw == -180) {
-                        yaw = 180;
-                    }
-                    return Float.parseFloat(String.format("%.1f", yaw));
-                }
-            }
-        }
-        Main.sendMarkedChatMessage("Error With Fixing Yaw. yaw: " + yaw + ". yaw: " + Float.parseFloat(String.format("%.1f", yaw)) + ".");
-        return 0;
+    // Look Turn Order setting
+    private static final int ORDER_TOGETHER = 0;
+    private static final int ORDER_PITCH_FIRST = 1;
+    private static final int ORDER_YAW_FIRST = 2;
+    private static final int ORDER_RANDOM = 3;
+
+    // The turn currently being carried out
+    private static float plannedYaw = Float.NaN;
+    private static float plannedPitch = Float.NaN;
+    private static int turnOrder = ORDER_TOGETHER;
+    private static int turnTicks = 0;
+    private static int firstAxisTicks = 0;
+    private static int turnElapsed = 0;
+
+    private static final Random random = new Random();
+
+    // Fastest allowed turn: turnSpeed * 0.1 degrees, twice per tick (the old turning ran on both tick phases)
+    private static float maxStepPerTick() {
+        return AIOMVigilanceConfig.turnSpeed * 0.1f * 2;
     }
 
-    @SubscribeEvent
-    public void goToYaw(TickEvent.ClientTickEvent event) {
-        if (toggled) {
-            for (int i = 0; i < AIOMVigilanceConfig.turnSpeed && !isYawLookCorrect(); i++) {
-                float fixedYaw = fixYaw(Main.mcPlayer.rotationYaw);
+    private static void planTurn() {
+        plannedYaw = yaw;
+        plannedPitch = pitch;
+        turnElapsed = 0;
 
-                int direction = getDirection(fixedYaw, yaw);
-
-                if (direction == 1) {
-                    Main.mcPlayer.rotationYaw -= 0.1;
-                } else if (direction == 2) {
-                    Main.mcPlayer.rotationYaw += 0.1;
-                }
-            }
+        turnOrder = AIOMVigilanceConfig.lookTurnOrder;
+        if (turnOrder == ORDER_RANDOM) {
+            turnOrder = random.nextBoolean() ? ORDER_PITCH_FIRST : ORDER_YAW_FIRST;
         }
-    }
 
-    public int getDirection(float yaw, float yawGoal) {
-        double tempYaw1 = Math.floor(yaw);
-        double tempYaw2 = Math.floor(yaw);
-        if (tempYaw1 == yawGoal) {
-            return 1;
-        } else if (tempYaw2 == yawGoal) {
-            return 2;
+        float yawLeft = Math.abs(wrapYaw(yaw - Main.mcPlayer.rotationYaw));
+        float pitchLeft = Math.abs(pitch - Main.mcPlayer.rotationPitch);
+
+        // Tiny corrections (e.g. after being pushed) use the normal speed instead of the configured turn time
+        if (yawLeft + pitchLeft < 1f) {
+            turnTicks = 0;
         } else {
-            for (int i = 0; i < 180; i++) {
-                tempYaw1--;
-                tempYaw2++;
-
-                if (tempYaw1 == -181) {
-                    tempYaw1 = 180;
-                }
-                if (tempYaw2 == 181) {
-                    tempYaw2 = -180;
-                }
-                if (tempYaw1 == yawGoal) {
-                    return 1;
-                }
-                if (tempYaw2 == yawGoal) {
-                    return 2;
-                }
-            }
+            int minMs = Math.min(AIOMVigilanceConfig.lookTurnTimeMin, AIOMVigilanceConfig.lookTurnTimeMax);
+            int maxMs = Math.max(AIOMVigilanceConfig.lookTurnTimeMin, AIOMVigilanceConfig.lookTurnTimeMax);
+            turnTicks = (minMs + random.nextInt(maxMs - minMs + 1)) / 50;
         }
-        Main.sendMarkedChatMessage("Error With Setting Yaw. tempYaw1: " + tempYaw1 + ". tempYaw2: " + tempYaw2 + ". yawGoal: " + yawGoal);
-        return 0;
+
+        // When turning one axis after the other, split the time by how far each axis has to turn
+        float firstAngle = turnOrder == ORDER_PITCH_FIRST ? pitchLeft : yawLeft;
+        firstAxisTicks = turnOrder == ORDER_TOGETHER || yawLeft + pitchLeft == 0 ? turnTicks : Math.round(turnTicks * firstAngle / (yawLeft + pitchLeft));
     }
 
+    // Moves towards the target, spreading what is left over the ticks left, but never faster than the max speed
+    private static float stepTowards(float difference, int endTick) {
+        int ticksLeft = Math.max(1, endTick - turnElapsed + 1);
+        float step = Math.min(maxStepPerTick(), Math.abs(difference) / ticksLeft);
+        if (Math.abs(difference) <= step) {
+            return difference;
+        }
+        return Math.signum(difference) * step;
+    }
 
     @SubscribeEvent
-    public void goToPitch(TickEvent.ClientTickEvent event) {
-        if (toggled) {
-            for (int i = 0; i < AIOMVigilanceConfig.turnSpeed && !isPitchLookCorrect(); i++) {
-                if (pitch > Float.parseFloat(String.format("%.1f", Main.mcPlayer.rotationPitch))) {
-                    Main.mcPlayer.rotationPitch += 0.1;
-                } else {
-                    Main.mcPlayer.rotationPitch -= 0.1;
-                }
-            }
+    public void goToLook(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) {
+            return;
+        }
+        if (!toggled || Main.mcPlayer == null || isLookCorrect()) {
+            plannedYaw = Float.NaN;
+            return;
+        }
+        if (Float.isNaN(plannedYaw) || plannedYaw != yaw || plannedPitch != pitch) {
+            planTurn();
+        }
+        turnElapsed++;
+
+        boolean yawDone = isYawLookCorrect();
+        boolean pitchDone = isPitchLookCorrect();
+
+        if (!yawDone && (turnOrder != ORDER_PITCH_FIRST || pitchDone)) {
+            int yawEnd = turnOrder == ORDER_YAW_FIRST ? firstAxisTicks : turnTicks;
+            Main.mcPlayer.rotationYaw += stepTowards(wrapYaw(yaw - Main.mcPlayer.rotationYaw), yawEnd);
+        }
+        if (!pitchDone && (turnOrder != ORDER_YAW_FIRST || yawDone)) {
+            int pitchEnd = turnOrder == ORDER_PITCH_FIRST ? firstAxisTicks : turnTicks;
+            Main.mcPlayer.rotationPitch += stepTowards(pitch - Main.mcPlayer.rotationPitch, pitchEnd);
         }
     }
 

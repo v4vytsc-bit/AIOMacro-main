@@ -97,7 +97,7 @@ public class Failsafe {
     @SubscribeEvent
     public void playerTick(@NotNull TickEvent.ClientTickEvent event) {
         Intrinsics.checkNotNullParameter(event, "event");
-        if (MacroHandler.isMacroOn && Main.mcPlayer != null && Main.mcWorld != null && (AIOMVigilanceConfig.macroType == 0 || AIOMVigilanceConfig.macroType == 1)) {
+        if (MacroHandler.isMacroOn && Main.mcPlayer != null && Main.mcWorld != null && (AIOMVigilanceConfig.macroType == 0 || AIOMVigilanceConfig.macroType == 1 || AIOMVigilanceConfig.macroType == 12 || AIOMVigilanceConfig.macroType == 13 || AIOMVigilanceConfig.macroType == 14)) {
             if (AIOMVigilanceConfig.bedrockfailsafe) {
                 if (bedrockFailsafe()) {
                     Main.sendMarkedChatMessage("Macro Disabled! | " + EnumChatFormatting.RED + "FAILSAFE Bedrock Detected!");

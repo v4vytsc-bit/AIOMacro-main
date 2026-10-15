@@ -25,7 +25,7 @@ public class Scatha {
             SetPlayerLook.pitch = 15;
             SetPlayerLook.toggled = true;
 
-            switch (AIOMVigilanceConfig.yaw) {
+            switch (AIOMVigilanceConfig.getCardinalYaw()) {
                 case 0:
                     if (Main.mcWorld.getBlockState(playerPos.add(0, 0, 2)).getBlock() != Blocks.air) {
                         Main.mcPlayer.sendQueue.addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, new BlockPos(playerPos.add(0, 0, 2)), EnumFacing.SOUTH));

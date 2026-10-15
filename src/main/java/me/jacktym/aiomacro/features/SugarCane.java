@@ -19,6 +19,9 @@ public class SugarCane {
     @SubscribeEvent
     public void farmRow(@NotNull TickEvent.ClientTickEvent event) {
         if (MacroHandler.isMacroOn && (MacroHandler.isSugarCane || MacroHandler.isCocoaBean)) {
+            if (!MacroHandler.waitForLook()) {
+                return;
+            }
             KeyBinding.setKeyBindState(Main.mc.gameSettings.keyBindAttack.getKeyCode(), true);
             if (MacroHandler.isSugarCane) {
                 KeyBinding.setKeyBindState(Main.mc.gameSettings.keyBindLeft.getKeyCode(), left);

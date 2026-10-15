@@ -48,7 +48,7 @@ public class FastBreak {
                 blocks.add(new Vec3((double) blockPos.getX() + 0.5, blockPos.getY(), (double) blockPos.getZ() + 0.5));
             }
 
-            if (AIOMVigilanceConfig.yaw == 90) {
+            if (AIOMVigilanceConfig.getCardinalYaw() == 90) {
                 // -x
 
                 for (Vec3 block : blocks) {
@@ -61,7 +61,7 @@ public class FastBreak {
                 }
 
             }
-            if (AIOMVigilanceConfig.yaw == 180) {
+            if (AIOMVigilanceConfig.getCardinalYaw() == 180) {
                 // -z
                 for (Vec3 block : blocks) {
                     Block b = Main.mcWorld.getBlockState(new BlockPos(block)).getBlock();
@@ -73,7 +73,7 @@ public class FastBreak {
 
                 }
             }
-            if (AIOMVigilanceConfig.yaw == -90) {
+            if (AIOMVigilanceConfig.getCardinalYaw() == -90) {
                 // +x
 
                 for (Vec3 block : blocks) {
@@ -86,7 +86,7 @@ public class FastBreak {
 
                 }
             }
-            if (AIOMVigilanceConfig.yaw == 0) {
+            if (AIOMVigilanceConfig.getCardinalYaw() == 0) {
                 // +z
 
                 for (Vec3 block : blocks) {

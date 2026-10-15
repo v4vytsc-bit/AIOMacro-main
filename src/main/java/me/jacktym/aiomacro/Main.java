@@ -8,7 +8,7 @@ import me.jacktym.aiomacro.commands.AIOC;
 import me.jacktym.aiomacro.commands.AIOM;
 import me.jacktym.aiomacro.config.AIOMVigilanceConfig;
 import me.jacktym.aiomacro.features.*;
-import me.jacktym.aiomacro.features.coins.Trades;
+//import me.jacktym.aiomacro.features.coins.Trades; // source not included in the original repo
 import me.jacktym.aiomacro.keybinds.ModInputHandler;
 import me.jacktym.aiomacro.proxy.ClientProxy;
 import me.jacktym.aiomacro.proxy.CommonProxy;
@@ -155,6 +155,8 @@ public class Main {
         registry.add(new NetherWart());
         registry.add(new SugarCane());
         registry.add(new OneRow());
+        registry.add(new SerpentineFarm());
+        registry.add(new PumpkinMelon());
         registry.add(new AntiStuck());
         registry.add(new Nuker());
         registry.add(new SetPlayerLook());
@@ -182,7 +184,7 @@ public class Main {
         registry.add(new AutoReopenAH());
         registry.add(new CarpentryMacro());
         registry.add(new Kuudra());
-        registry.add(new Trades());
+        //registry.add(new Trades()); // source not included in the original repo
         registry.add(new AuctionFlipper());
         registry.add(new DungeonRoomDetection());
         registry.add(new me.jacktym.aiomacro.rendering.LineRendering());

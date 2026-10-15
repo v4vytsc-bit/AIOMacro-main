@@ -20,6 +20,9 @@ public class NetherWart {
     @SubscribeEvent
     public void farmRow(@NotNull TickEvent.ClientTickEvent event) {
         if (MacroHandler.isMacroOn && MacroHandler.isNetherWart) {
+            if (!MacroHandler.waitForLook()) {
+                return;
+            }
             KeyBinding.setKeyBindState(Main.mc.gameSettings.keyBindAttack.getKeyCode(), true);
             KeyBinding.setKeyBindState(Main.mc.gameSettings.keyBindLeft.getKeyCode(), left);
             KeyBinding.setKeyBindState(Main.mc.gameSettings.keyBindRight.getKeyCode(), !left);

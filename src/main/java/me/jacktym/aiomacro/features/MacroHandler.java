@@ -18,6 +18,28 @@ public class MacroHandler {
     public static boolean isSugarCane = false;
     public static boolean isCocoaBean = false;
     public static boolean isOneRow = false;
+    public static boolean isSerpentine = false;
+    public static boolean isPumpkinMelon = false;
+
+    // False until the player has turned to the set pitch/yaw after starting the macro
+    public static boolean lookReady = false;
+
+    // Farming macros call this first every tick: keeps the player still until the look reaches the set pitch/yaw
+    public static boolean waitForLook() {
+        if (lookReady) {
+            return true;
+        }
+        if (SetPlayerLook.isLookCorrect()) {
+            lookReady = true;
+            return true;
+        }
+        KeyBinding.setKeyBindState(Main.mc.gameSettings.keyBindLeft.getKeyCode(), false);
+        KeyBinding.setKeyBindState(Main.mc.gameSettings.keyBindRight.getKeyCode(), false);
+        KeyBinding.setKeyBindState(Main.mc.gameSettings.keyBindForward.getKeyCode(), false);
+        KeyBinding.setKeyBindState(Main.mc.gameSettings.keyBindBack.getKeyCode(), false);
+        KeyBinding.setKeyBindState(Main.mc.gameSettings.keyBindAttack.getKeyCode(), false);
+        return false;
+    }
 
     public static void toggleMacro() {
         AuctionFlipper.uuids.clear();
@@ -35,6 +57,9 @@ public class MacroHandler {
             isSugarCane = false;
             isCocoaBean = false;
             isOneRow = false;
+            isSerpentine = false;
+            isPumpkinMelon = false;
+            lookReady = false;
             isMacroOn = true;
             macroStartMillis = Utils.currentTimeMillis();
 
@@ -75,6 +100,30 @@ public class MacroHandler {
                 if (AIOMVigilanceConfig.ungrab) {
                     Utils.unGrab();
                 }
+            } else if (AIOMVigilanceConfig.macroType == 12) {
+                SerpentineFarm.start(false);
+                isSerpentine = true;
+                SetPlayerLook.setDefault();
+                SetPlayerLook.toggled = true;
+                if (AIOMVigilanceConfig.ungrab) {
+                    Utils.unGrab();
+                }
+            } else if (AIOMVigilanceConfig.macroType == 13) { // Mushroom Serpentine
+                SerpentineFarm.start(true);
+                isSerpentine = true;
+                SetPlayerLook.setDefault();
+                SetPlayerLook.toggled = true;
+                if (AIOMVigilanceConfig.ungrab) {
+                    Utils.unGrab();
+                }
+            } else if (AIOMVigilanceConfig.macroType == 14) {
+                PumpkinMelon.start();
+                isPumpkinMelon = true;
+                SetPlayerLook.setDefault();
+                SetPlayerLook.toggled = true;
+                if (AIOMVigilanceConfig.ungrab) {
+                    Utils.unGrab();
+                }
             } else if (AIOMVigilanceConfig.macroType == 11) {
                 OneRow.forwards = true;
                 isOneRow = true;
@@ -92,6 +141,7 @@ public class MacroHandler {
             KeyBinding.setKeyBindState(Main.mc.gameSettings.keyBindLeft.getKeyCode(), false);
             KeyBinding.setKeyBindState(Main.mc.gameSettings.keyBindForward.getKeyCode(), false);
             KeyBinding.setKeyBindState(Main.mc.gameSettings.keyBindAttack.getKeyCode(), false);
+            KeyBinding.setKeyBindState(Main.mc.gameSettings.keyBindJump.getKeyCode(), false);
 
             CarpentryMacro.claimDiamonds = true;
             CarpentryMacro.craftDiamonds = false;
@@ -101,6 +151,8 @@ public class MacroHandler {
 
             isNetherWart = false;
             isSugarCane = false;
+            isSerpentine = false;
+            isPumpkinMelon = false;
 
             SetPlayerLook.toggled = false;
 

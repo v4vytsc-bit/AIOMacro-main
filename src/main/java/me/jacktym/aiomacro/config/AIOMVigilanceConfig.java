@@ -42,27 +42,135 @@ public class AIOMVigilanceConfig extends Vigilant {
             name = "Macro Type",
             description = "Choose the macro you would like to use.",
             category = "Macro Settings",
-            options = {"Netherwart/S-Shaped", "Sugarcane", "Nuker", "Bazaar Flipper", "Fairy Soul Aura", "Shiny Pig ESP", "Minion Aura", "Scatha Macro", "Carpentry Macro", "Auction Flipper", "Cocoa Bean", "One Row"}
+            options = {"Netherwart/S-Shaped", "Sugarcane", "Nuker", "Bazaar Flipper", "Fairy Soul Aura", "Shiny Pig ESP", "Minion Aura", "Scatha Macro", "Carpentry Macro", "Auction Flipper", "Cocoa Bean", "One Row", "Serpentine (Layered)", "Mushroom Serpentine", "Pumpkin/Melon"}
     )
     public static int macroType;
     @Property(
-            type = PropertyType.SLIDER,
-            name = "Pitch",
-            description = "Sets the value you are looking up and down (Check f3).",
-            category = "Macro Settings",
-            min = -90,
-            max = 90
+            type = PropertyType.TEXT,
+            name = "Pitch Angle",
+            description = "Sets the value you are looking up and down (Check f3). -90 to 90, decimals allowed (e.g. 2.5).",
+            category = "Macro Settings"
     )
-    public static int pitch;
+    public static String pitchText = "0";
+    @Property(
+            type = PropertyType.TEXT,
+            name = "Yaw Angle",
+            description = "Sets the value you are looking left to right (Check f3). -180 to 180, decimals allowed (e.g. -90.35).",
+            category = "Macro Settings"
+    )
+    public static String yawText = "0";
+
+    // Parsed pitch from the text field, clamped to -90..90. Invalid input falls back to 0.
+    public static float getPitch() {
+        return Math.max(-90f, Math.min(90f, parseAngle(pitchText)));
+    }
+
+    // Parsed yaw from the text field, wrapped to -180..180. Invalid input falls back to 0.
+    public static float getYaw() {
+        return SetPlayerLook.wrapYaw(parseAngle(yawText));
+    }
+
+    // Configured yaw snapped to the nearest cardinal direction (0, 90, 180, -90), used to pick the farming direction.
+    public static int getCardinalYaw() {
+        int cardinal = Math.round(getYaw() / 90f) * 90;
+        return cardinal == -180 ? 180 : cardinal;
+    }
+
+    private static float parseAngle(String text) {
+        if (text == null) {
+            return 0f;
+        }
+        try {
+            float value = Float.parseFloat(text.trim().replace(',', '.'));
+            return Float.isNaN(value) || Float.isInfinite(value) ? 0f : value;
+        } catch (NumberFormatException e) {
+            return 0f;
+        }
+    }
+    @Property(
+            type = PropertyType.SELECTOR,
+            name = "Serpentine First Row",
+            description = "Which way to strafe along the first row (the row you start the macro on).",
+            category = "Macro Settings",
+            subcategory = "Serpentine (Layered)",
+            options = {"Left (A)", "Right (D)"}
+    )
+    public static int serpentineFirstRow = 0;
+    @Property(
+            type = PropertyType.SELECTOR,
+            name = "Serpentine First Layer Shift",
+            description = "How to step onto the next row on the first layer. Flips automatically every time you drop to a new layer.",
+            category = "Macro Settings",
+            subcategory = "Serpentine (Layered)",
+            options = {"Backward (S)", "Forward (W)"}
+    )
+    public static int serpentineFirstShift = 0;
     @Property(
             type = PropertyType.SLIDER,
-            name = "Yaw",
-            description = "Sets the value you are looking left to right (Check f3).",
+            name = "Serpentine Row Shift",
+            description = "How many blocks to walk forward/back to get from one row onto the next.",
             category = "Macro Settings",
-            min = -180,
-            max = 180
+            subcategory = "Serpentine (Layered)",
+            min = 1,
+            max = 10
     )
-    public static int yaw;
+    public static int serpentineRowShift = 3;
+    @Property(
+            type = PropertyType.SELECTOR,
+            name = "Serpentine Start Layer",
+            description = "Mushroom Serpentine only: which layer you start the macro on. Top = the layer you drop down from.",
+            category = "Macro Settings",
+            subcategory = "Serpentine (Layered)",
+            options = {"Top Layer", "Bottom Layer"}
+    )
+    public static int serpentineStartLayer = 0;
+    @Property(
+            type = PropertyType.SELECTOR,
+            name = "Water Column Exit",
+            description = "Mushroom Serpentine only: after swimming up, step out going the opposite way to the last bottom-layer row (turn around) or the same way.",
+            category = "Macro Settings",
+            subcategory = "Serpentine (Layered)",
+            options = {"Opposite Way", "Same Way"}
+    )
+    public static int serpentineWaterExit = 0;
+    @Property(
+            type = PropertyType.SELECTOR,
+            name = "Pumpkin/Melon First Direction",
+            description = "Which way to strafe along the row you start on. Turns around automatically after every drop.",
+            category = "Macro Settings",
+            subcategory = "Pumpkin/Melon",
+            options = {"Left (A)", "Right (D)"}
+    )
+    public static int pumpkinMelonFirstDirection = 1;
+    @Property(
+            type = PropertyType.SLIDER,
+            name = "Look Turn Time Min",
+            description = "Shortest time (ms) a turn to the set pitch/yaw takes. 0 = normal speed. Turning never goes faster than Turn Speed.",
+            category = "Macro Settings",
+            subcategory = "Look Turning",
+            min = 0,
+            max = 5000
+    )
+    public static int lookTurnTimeMin = 0;
+    @Property(
+            type = PropertyType.SLIDER,
+            name = "Look Turn Time Max",
+            description = "Longest time (ms) a turn to the set pitch/yaw takes. Each turn picks a random time between Min and Max.",
+            category = "Macro Settings",
+            subcategory = "Look Turning",
+            min = 0,
+            max = 5000
+    )
+    public static int lookTurnTimeMax = 0;
+    @Property(
+            type = PropertyType.SELECTOR,
+            name = "Look Turn Order",
+            description = "Turn pitch and yaw at the same time, one after the other, or pick an order at random for every turn.",
+            category = "Macro Settings",
+            subcategory = "Look Turning",
+            options = {"Both Together", "Pitch Then Yaw", "Yaw Then Pitch", "Random Order"}
+    )
+    public static int lookTurnOrder = 0;
     @Property(
             type = PropertyType.SWITCH,
             name = "Auto God Potion",
