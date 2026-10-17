@@ -24,7 +24,7 @@ public class ShinyPigESP {
 
     @SubscribeEvent
     public void tickEvent(TickEvent.ClientTickEvent event) {
-        if (Main.notNull && AIOMVigilanceConfig.macroType == 5 && MacroHandler.isMacroOn) {
+        if (Main.notNull && AIOMVigilanceConfig.macroType == 4 && MacroHandler.isMacroOn) {
             yourPigArmorstands.clear();
             yourPigs.clear();
             allPigs.clear();
@@ -63,7 +63,7 @@ public class ShinyPigESP {
 
     @SubscribeEvent
     public void renderWorld(RenderWorldLastEvent event) {
-        if (AIOMVigilanceConfig.macroType == 5 && MacroHandler.isMacroOn) {
+        if (AIOMVigilanceConfig.macroType == 4 && MacroHandler.isMacroOn) {
             for (BlockPos bp : yourPigs) {
                 BlockRendering.renderMap.put(bp, Color.RED);
             }

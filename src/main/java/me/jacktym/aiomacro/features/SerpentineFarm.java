@@ -42,9 +42,12 @@ public class SerpentineFarm {
 
     // Mushroom Serpentine (2-layer loop)
     private static boolean twoLayerLoop = false;
-    private static boolean onTopLayer = true;
     private static boolean rowStartedOnLayer = false;
     private static boolean wasInWater = false;
+    // Walked (not fell) into the water we're in, so it may be the column to swim up
+    private static boolean walkedIntoWater = false;
+    private static double waterEntryY = 0;
+    private static Vec3 rowStart = null;
     private static boolean exitLeft = false;
     private static double climbStartY = 0;
     private static double climbMaxY = 0;
@@ -64,10 +67,11 @@ public class SerpentineFarm {
         stillTicks = 0;
         pauseTicks = 0;
         twoLayerLoop = twoLayers;
-        onTopLayer = AIOMVigilanceConfig.serpentineStartLayer == 0;
         // The macro is started at the beginning of a row
         rowStartedOnLayer = true;
         wasInWater = Main.mcPlayer.isInWater();
+        walkedIntoWater = false;
+        rowStart = Main.mcPlayer.getPositionVector();
     }
 
     @SubscribeEvent
@@ -82,12 +86,22 @@ public class SerpentineFarm {
 
         detectLayerDrop(player);
 
-        // Bottom layer finished: walked into the water column, swim up to the top layer
+        // Bottom layer finished: walked into a water column that goes up, swim up to the top layer.
+        // Falling into water, or sinking down through it, is a drop and not the way up, so it doesn't count.
         boolean inWater = player.isInWater();
-        if (twoLayerLoop && state != State.CLIMB && !onTopLayer && rowStartedOnLayer && inWater && !wasInWater) {
-            startClimb(player);
+        if (inWater && !wasInWater) {
+            walkedIntoWater = player.motionY > -0.3;
+            waterEntryY = player.posY;
+        } else if (!inWater) {
+            walkedIntoWater = false;
         }
         wasInWater = inWater;
+        if (twoLayerLoop && state != State.CLIMB && rowStartedOnLayer && walkedIntoWater
+                && player.posY > waterEntryY - 0.5
+                && isUpColumn(new BlockPos(player.posX, player.posY, player.posZ))) {
+            walkedIntoWater = false;
+            startClimb(player);
+        }
 
         boolean stopped = player.onGround && Math.abs(player.motionX) <= 0.001 && Math.abs(player.motionZ) <= 0.001;
         stillTicks = stopped ? stillTicks + 1 : 0;
@@ -99,10 +113,13 @@ public class SerpentineFarm {
             case FARM_ROW:
                 setMovement(strafeLeft, !strafeLeft, false, false);
 
-                // Stood still for a few ticks after properly starting the row = end of the row
-                if (stillTicks >= 3 && stateTicks >= 10) {
-                    if (stateTicks < 15 && !justLanded && AIOMVigilanceConfig.antiStuckFailsafe) {
-                        // Stopped almost immediately, something is in the way
+                // Stood still after moving along the row = end of the row.
+                // Right after a drop we're already against the end wall, so any stop counts.
+                boolean movedAlongRow = distanceAlongStrafe(player, rowStart) >= 1.0;
+                if (stillTicks >= 3 && stateTicks >= 10 && (movedAlongRow || justLanded || stillTicks >= 20)) {
+                    if (!movedAlongRow && !justLanded && AIOMVigilanceConfig.antiStuckFailsafe) {
+                        // Stood still for a second without getting anywhere: something is in the way
+                        setMovement(false, false, false, false);
                         AntiStuck.antistuckOn = true;
                         enter(State.FARM_ROW);
                         return;
@@ -126,8 +143,8 @@ public class SerpentineFarm {
                         strafeLeft = !strafeLeft;
                         enter(State.FARM_ROW);
                     } else {
-                        // Bottom layer: the water column can sit one block forward/back from the end of the last row
-                        Boolean waterForward = twoLayerLoop && !onTopLayer ? findWaterBesideRowEnd(player) : null;
+                        // The water column up can sit one block forward/back from the end of the bottom layer's last row
+                        Boolean waterForward = twoLayerLoop ? findWaterBesideRowEnd(player) : null;
                         currentShiftForward = waterForward != null ? waterForward : shiftForward;
                         shiftStart = player.getPositionVector();
                         enter(State.SHIFT);
@@ -181,7 +198,6 @@ public class SerpentineFarm {
                 if (exitTicks > 0 && player.onGround && !inWater) {
                     // On the top layer, already strafing along its first row
                     setKey(Main.mc.gameSettings.keyBindJump, false);
-                    onTopLayer = true;
                     rowStartedOnLayer = true;
                     shiftForward = !shiftForward;
                     strafeLeft = exitLeft;
@@ -206,7 +222,6 @@ public class SerpentineFarm {
         }
         if (!Double.isNaN(groundY) && player.posY < groundY - 1.5 && state != State.CLIMB) {
             justLanded = true;
-            onTopLayer = false;
             rowStartedOnLayer = false;
             shiftForward = !shiftForward;
             if (state != State.FARM_ROW) {
@@ -238,18 +253,32 @@ public class SerpentineFarm {
         return isPassable(feet) && isPassable(feet.up()) && !isPassable(feet.down());
     }
 
-    // Water one block in front of / behind the player: true = forward, false = back, null = no water there
+    // Water column going up one block in front of / behind the player: true = forward, false = back, null = none
     private static Boolean findWaterBesideRowEnd(EntityPlayerSP player) {
         double yawRad = Math.toRadians(player.rotationYaw);
         double lookX = -Math.sin(yawRad);
         double lookZ = Math.cos(yawRad);
-        if (isWater(new BlockPos(player.posX + lookX, player.posY, player.posZ + lookZ))) {
+        if (isUpColumn(new BlockPos(player.posX + lookX, player.posY, player.posZ + lookZ))) {
             return true;
         }
-        if (isWater(new BlockPos(player.posX - lookX, player.posY, player.posZ - lookZ))) {
+        if (isUpColumn(new BlockPos(player.posX - lookX, player.posY, player.posZ - lookZ))) {
             return false;
         }
         return null;
+    }
+
+    // Water here that carries on above head height = a column to swim up (the top of a column has air above)
+    private static boolean isUpColumn(BlockPos feet) {
+        return isWater(feet) && isWater(feet.up(2));
+    }
+
+    // Horizontal distance moved sideways (along the row) relative to where the player is looking
+    private static double distanceAlongStrafe(EntityPlayerSP player, Vec3 from) {
+        if (from == null) {
+            return 0;
+        }
+        double yawRad = Math.toRadians(player.rotationYaw);
+        return Math.abs((player.posX - from.xCoord) * Math.cos(yawRad) + (player.posZ - from.zCoord) * Math.sin(yawRad));
     }
 
     private static boolean isWater(BlockPos pos) {
@@ -271,6 +300,9 @@ public class SerpentineFarm {
         state = newState;
         stateTicks = 0;
         stillTicks = 0;
+        if (newState == State.FARM_ROW) {
+            rowStart = Main.mcPlayer.getPositionVector();
+        }
     }
 
     // Horizontal distance moved along the direction the player is looking

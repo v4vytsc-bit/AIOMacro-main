@@ -56,7 +56,7 @@ public class MinionAura {
 
     @SubscribeEvent
     public void openTick(TickEvent.ClientTickEvent e) {
-        if (Main.notNull && !inMinion && AIOMVigilanceConfig.macroType == 6 && MacroHandler.isMacroOn) {
+        if (Main.notNull && !inMinion && AIOMVigilanceConfig.macroType == 5 && MacroHandler.isMacroOn) {
 
             if (claimList.isEmpty()) {
                 claimList = getMinions();
@@ -95,7 +95,7 @@ public class MinionAura {
 
     @SubscribeEvent
     public void guiScreenEvent(GuiScreenEvent event) {
-        if (event.gui instanceof GuiChest && AIOMVigilanceConfig.macroType == 6 && MacroHandler.isMacroOn) {
+        if (event.gui instanceof GuiChest && AIOMVigilanceConfig.macroType == 5 && MacroHandler.isMacroOn) {
             if (claimTick >= 100) {
                 claimTick = 0;
                 IInventory chest = ((ContainerChest) (((GuiChest) event.gui).inventorySlots)).getLowerChestInventory();

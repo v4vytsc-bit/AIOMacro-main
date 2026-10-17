@@ -1,5 +1,6 @@
 package me.jacktym.aiomacro.features;
 
+import me.jacktym.aiomacro.util.SignInput;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -45,7 +46,7 @@ public class AuctionFlipper {
 
     @SubscribeEvent
     public void clientTick(TickEvent.ClientTickEvent event) {
-        if (Main.notNull && MacroHandler.isMacroOn && AIOMVigilanceConfig.macroType == 9 && Main.mcWorld.getScoreboard().getObjectiveInDisplaySlot(1) != null && Main.mcWorld.getScoreboard().getObjectiveInDisplaySlot(1) != null && Main.mcWorld.getScoreboard().getObjectiveInDisplaySlot(1).getDisplayName().contains("SKYBLOCK")) {
+        if (Main.notNull && MacroHandler.isMacroOn && AIOMVigilanceConfig.macroType == 8 && Main.mcWorld.getScoreboard().getObjectiveInDisplaySlot(1) != null && Main.mcWorld.getScoreboard().getObjectiveInDisplaySlot(1) != null && Main.mcWorld.getScoreboard().getObjectiveInDisplaySlot(1).getDisplayName().contains("SKYBLOCK")) {
             if (!auctionUUIDToBuy.equals("")) {
                 if (Main.mc.currentScreen == null) {
                     if (ticks >= 20) {
@@ -142,7 +143,7 @@ public class AuctionFlipper {
                             }
                         } else if (Main.mc.currentScreen instanceof GuiEditSign) {
                             try {
-                                TileEntitySign currentSign = BazaarFlipper.currentSign;
+                                TileEntitySign currentSign = SignInput.currentSign;
                                 if (currentSign != null) {
                                     currentSign.signText[0] = new ChatComponentText(itemPrice);
 

@@ -11,6 +11,7 @@ import me.jacktym.aiomacro.features.*;
 import me.jacktym.aiomacro.gui.HUDLocationGui;
 import me.jacktym.aiomacro.gui.TPSViewerGui;
 import me.jacktym.aiomacro.rendering.LineRendering;
+import me.jacktym.aiomacro.util.Discord;
 import me.jacktym.aiomacro.util.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.BlockPos;
@@ -42,7 +43,7 @@ public class AIOMVigilanceConfig extends Vigilant {
             name = "Macro Type",
             description = "Choose the macro you would like to use.",
             category = "Macro Settings",
-            options = {"Netherwart/S-Shaped", "Sugarcane", "Nuker", "Bazaar Flipper", "Fairy Soul Aura", "Shiny Pig ESP", "Minion Aura", "Scatha Macro", "Carpentry Macro", "Auction Flipper", "Cocoa Bean", "One Row", "Serpentine (Layered)", "Mushroom Serpentine", "Pumpkin/Melon"}
+            options = {"Netherwart/S-Shaped", "Sugarcane", "Nuker", "Fairy Soul Aura", "Shiny Pig ESP", "Minion Aura", "Scatha Macro", "Carpentry Macro", "Auction Flipper", "Cocoa Bean", "One Row", "Serpentine (Layered)", "Mushroom Serpentine", "Pumpkin/Melon"}
     )
     public static int macroType;
     @Property(
@@ -115,15 +116,6 @@ public class AIOMVigilanceConfig extends Vigilant {
             max = 10
     )
     public static int serpentineRowShift = 3;
-    @Property(
-            type = PropertyType.SELECTOR,
-            name = "Serpentine Start Layer",
-            description = "Mushroom Serpentine only: which layer you start the macro on. Top = the layer you drop down from.",
-            category = "Macro Settings",
-            subcategory = "Serpentine (Layered)",
-            options = {"Top Layer", "Bottom Layer"}
-    )
-    public static int serpentineStartLayer = 0;
     @Property(
             type = PropertyType.SELECTOR,
             name = "Water Column Exit",
@@ -247,6 +239,73 @@ public class AIOMVigilanceConfig extends Vigilant {
             subcategory = "Webhooks"
     )
     public static String webhookLink;
+
+    //Discord Bot
+    @Property(
+            type = PropertyType.SWITCH,
+            name = "Discord Bot Enabled",
+            description = "Lets your group control your macro from Discord (!help for commands) and posts alerts there. Uses the bot built into this jar unless you fill in your own below.",
+            category = "Discord Bot"
+    )
+    public static boolean discordBotEnabled = true;
+    @Property(
+            type = PropertyType.TEXT,
+            name = "Bot Token",
+            description = "Leave empty to use the bot built into this jar. Only fill in to use a different bot (Developer Portal > Bot > Reset Token). Keep it secret.",
+            category = "Discord Bot",
+            protectedText = true
+    )
+    public static String discordBotToken = "";
+    @Property(
+            type = PropertyType.TEXT,
+            name = "Channel ID",
+            description = "Leave empty to use the built-in channel. Only fill in to use a different channel (right-click it > Copy Channel ID).",
+            category = "Discord Bot"
+    )
+    public static String discordChannelId = "";
+    @Property(
+            type = PropertyType.SWITCH,
+            name = "Send Alerts To Bot Channel",
+            description = "Post failsafe alerts (with a game screenshot) in the bot's channel.",
+            category = "Discord Bot"
+    )
+    public static boolean discordBotAlerts = true;
+    @Property(
+            type = PropertyType.SELECTOR,
+            name = "Alert Ping",
+            description = "Who to ping when an alert is posted in the bot's channel.",
+            category = "Discord Bot",
+            options = {"No Ping", "@here", "@everyone"}
+    )
+    public static int discordAlertPing = 0;
+    @Property(
+            type = PropertyType.BUTTON,
+            name = "Test Discord Bot",
+            description = "Sends a test message to the channel and tells you in chat whether it worked.",
+            placeholder = "Send!",
+            category = "Discord Bot"
+    )
+    public final void testDiscordBot() {
+        Discord.testBot();
+    }
+
+    //Inventory Preview
+    @Property(
+            type = PropertyType.SWITCH,
+            name = "Inventory Preview",
+            description = "Hold the Preview Inventory key (Left Alt by default, change it in Controls) to see your inventory without opening it. Macros keep running.",
+            category = "Inventory Preview"
+    )
+    public static boolean inventoryPreview = true;
+    @Property(
+            type = PropertyType.SLIDER,
+            name = "Inventory Preview Opacity",
+            description = "How solid the preview's background is (percent). Lower = more see-through.",
+            category = "Inventory Preview",
+            min = 10,
+            max = 100
+    )
+    public static int inventoryPreviewOpacity = 55;
     @Property(
             type = PropertyType.SLIDER,
             name = "Random Delay Minimum",
@@ -561,14 +620,6 @@ public class AIOMVigilanceConfig extends Vigilant {
             subcategory = "Auto Wheat"
     )
     public static boolean autoWheatPrivate;
-    //Bazaar Flipper
-    @Property(
-            type = PropertyType.TEXT,
-            name = "Bazaar Flipper Max Orders",
-            description = "The max orders the bot will place.",
-            category = "Bazaar Flipper"
-    )
-    public static String maxFlips = "6";
     //Cane Builder
     @Property(
             type = PropertyType.NUMBER,
@@ -613,26 +664,6 @@ public class AIOMVigilanceConfig extends Vigilant {
             System.out.println("[AIOM] Created config directory");
         }
         this.initialize();
-    }
-
-    public static List<String> getBazaarBlacklist() {
-        List<String> blacklistBazaar = new ArrayList<>();
-        if (blackListItems.contains(",")) {
-            for (String item : blackListItems.split(",")) {
-                if (BazaarFlipper.apiToGame.containsValue(item)) {
-                    blacklistBazaar.add(item);
-                } else {
-                    System.out.println("[AIOM] Error! " + item + " Not Found! Please check spelling and capitalization!");
-                }
-            }
-        } else if (!blackListItems.equals("")) {
-            if (BazaarFlipper.apiToGame.containsValue(blackListItems)) {
-                blacklistBazaar.add(blackListItems);
-            } else {
-                System.out.println("[AIOM] Error! " + blackListItems + " Not Found! Please check spelling and capitalization!");
-            }
-        }
-        return blacklistBazaar;
     }
 
     @Property(
@@ -737,78 +768,6 @@ public class AIOMVigilanceConfig extends Vigilant {
         CropAura.toggled = !CropAura.toggled;
     }
 
-    @Property(
-            type = PropertyType.TEXT,
-            name = "Bazaar Flipper Min Price",
-            description = "The minimum price of an item to order it (0 To Disable).",
-            category = "Bazaar Flipper"
-    )
-    public static String minPrice = "1000";
-    @Property(
-            type = PropertyType.TEXT,
-            name = "Bazaar Flipper Max Price",
-            description = "The maximum price of an item to order it (0 To Disable).",
-            category = "Bazaar Flipper"
-    )
-    public static String maxPrice = "1000000";
-    @Property(
-            type = PropertyType.TEXT,
-            name = "Bazaar Flipper Min Margin",
-            description = "The minimum margin of an item to order it (0 To Disable).",
-            category = "Bazaar Flipper"
-    )
-    public static String minMargin = "50000";
-    @Property(
-            type = PropertyType.TEXT,
-            name = "Bazaar Flipper Max Margin",
-            description = "The maximum margin of an item to order it stopping manipulations and api bugs (0 To Disable).",
-            category = "Bazaar Flipper"
-    )
-    public static String maxMargin = "500000";
-    @Property(
-            type = PropertyType.TEXT,
-            name = "Bazaar Flipper Min Volume",
-            description = "The minimum volume of an item to order it (0 To Disable).",
-            category = "Bazaar Flipper"
-    )
-    public static String minVolume = "500000";
-    @Property(
-            type = PropertyType.TEXT,
-            name = "Bazaar Flipper Max Volume",
-            description = "The maximum volume of an item to order it (0 To Disable).",
-            category = "Bazaar Flipper"
-    )
-    public static String maxVolume = "0";
-    @Property(
-            type = PropertyType.TEXT,
-            name = "Blacklist",
-            description = "Items to blacklist when flipping",
-            category = "Bazaar Flipper"
-    )
-    public static String blackListItems = "❁ Perfect Jasper Gemstone,Enchanted Cobblestone";
-    @Property(
-            type = PropertyType.CHECKBOX,
-            name = "Developer Mode",
-            description = "Helps with debugging",
-            category = "Bazaar Flipper"
-    )
-    public static boolean bazaarFlipDevMode = false;
-    @Property(
-            type = PropertyType.CHECKBOX,
-            name = "NPC Mode",
-            description = "Clicks the Bazaar NPC Rather than using /bz",
-            category = "Bazaar Flipper"
-    )
-    public static boolean bazaarFlipNpcMode = false;
-    @Property(
-            type = PropertyType.SLIDER,
-            name = "Tick Delay",
-            description = "Test for tick delay",
-            category = "Bazaar Flipper",
-            min = 1,
-            max = 100
-    )
-    public static int bazaarFlipDelay = 20;
 
     @Property(
             type = PropertyType.BUTTON,
@@ -832,7 +791,7 @@ public class AIOMVigilanceConfig extends Vigilant {
             description = "Allows your account to be controlled remotely via the discord bot (Only through a linked account)",
             category = "Account Linking"
     )
-    public static boolean remoteControllingOn = true;
+    public static boolean remoteControllingOn = false;
     @Property(
             type = PropertyType.SWITCH,
             name = "Enable Rendering",
@@ -874,19 +833,7 @@ public class AIOMVigilanceConfig extends Vigilant {
             subcategory = "Webhooks"
     )
     public final void testWebhook() {
-
-        String screenshotLink = Objects.requireNonNull(Utils.takeScreenshot()).replace("\"", "");
-
-        String jsonString = "{\"content\":null,\"embeds\":[{\"title\":\"Test Message | No Actions Done\",\"description\":\"A webhook test was requested. No\\nactions were taken.\\n\\nAccount: " + Main.mcPlayer.getName() + "\",\"color\":5814783,\"author\":{\"name\":\"AIO-Macro\"},\"image\":{\"url\":\"" + screenshotLink + "\"}}]}\n";
-
-        String trimmed = jsonString.trim();
-
-        JsonParser parser = new JsonParser();
-
-        JsonElement jsonElement = parser.parse(trimmed);
-
-        Utils.sendWebhook(jsonElement, AIOMVigilanceConfig.webhookLink);
-
+        Discord.testWebhook();
     }
 
     @Property(

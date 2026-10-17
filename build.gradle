@@ -74,6 +74,12 @@ processResources {
     inputs.property("mcversion", mcVersion)
     inputs.property("name", projectName)
     inputs.property("id", projectId)
+
+    // Built-in Discord bot: if discord-bot.properties exists (git-ignored), it's packed into the jar
+    // so players don't have to enter a token or channel. See discord-bot.example.properties.
+    from(rootProject.file("discord-bot.properties")) {
+        rename { "aiom-discord.properties" }
+    }
 }
 
 sourceSets {

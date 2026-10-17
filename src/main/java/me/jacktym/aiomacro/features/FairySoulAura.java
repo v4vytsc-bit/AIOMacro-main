@@ -27,7 +27,7 @@ public class FairySoulAura {
 
     @SubscribeEvent
     public void tickEvent(TickEvent.ClientTickEvent event) {
-        if (Main.mcWorld != null && Main.mcPlayer != null && AIOMVigilanceConfig.macroType == 4 && MacroHandler.isMacroOn) {
+        if (Main.mcWorld != null && Main.mcPlayer != null && AIOMVigilanceConfig.macroType == 3 && MacroHandler.isMacroOn) {
             List<Entity> entityList = Main.mcWorld.loadedEntityList;
 
             for (Entity entity : entityList) {

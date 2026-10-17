@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import kotlin.jvm.internal.Intrinsics;
 import me.jacktym.aiomacro.Main;
 import me.jacktym.aiomacro.config.AIOMVigilanceConfig;
+import me.jacktym.aiomacro.util.Discord;
 import me.jacktym.aiomacro.util.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -44,6 +45,7 @@ public class Failsafe {
     long lastCounter = 0;
     private int desyncTick = 0;
     private int jacobTick = 0;
+    private static long lastAutoWebhookMinute = -1;
 
     public static boolean bedrockFailsafe() {
         MovingObjectPosition mop = Main.mc.getRenderViewEntity().rayTrace(200, 1.0F);
@@ -97,7 +99,7 @@ public class Failsafe {
     @SubscribeEvent
     public void playerTick(@NotNull TickEvent.ClientTickEvent event) {
         Intrinsics.checkNotNullParameter(event, "event");
-        if (MacroHandler.isMacroOn && Main.mcPlayer != null && Main.mcWorld != null && (AIOMVigilanceConfig.macroType == 0 || AIOMVigilanceConfig.macroType == 1 || AIOMVigilanceConfig.macroType == 12 || AIOMVigilanceConfig.macroType == 13 || AIOMVigilanceConfig.macroType == 14)) {
+        if (MacroHandler.isMacroOn && Main.mcPlayer != null && Main.mcWorld != null && (AIOMVigilanceConfig.macroType == 0 || AIOMVigilanceConfig.macroType == 1 || AIOMVigilanceConfig.macroType == 11 || AIOMVigilanceConfig.macroType == 12 || AIOMVigilanceConfig.macroType == 13)) {
             if (AIOMVigilanceConfig.bedrockfailsafe) {
                 if (bedrockFailsafe()) {
                     Main.sendMarkedChatMessage("Macro Disabled! | " + EnumChatFormatting.RED + "FAILSAFE Bedrock Detected!");
@@ -109,20 +111,7 @@ public class Failsafe {
                             Main.mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("note.pling"), (float) Main.mcPlayer.posX, (float) Main.mcPlayer.posY, (float) Main.mcPlayer.posZ));
                         }
                     }
-                    if (AIOMVigilanceConfig.webhookAlerts) {
-
-                        String screenshotLink = Objects.requireNonNull(Utils.takeScreenshot()).replace("\"", "");
-
-                        String jsonString = "{\"content\":null,\"embeds\":[{\"title\":\"Failsafe Alert | Macro Stopped\",\"description\":\"The macro has stopped due to bedrock\\nbeing detected in front of the player.\\n\\nAccount: " + Main.mcPlayer.getName() + "\",\"color\":5814783,\"author\":{\"name\":\"AIO-Macro\"},\"image\":{\"url\":\"" + screenshotLink + "\"}}]}\n";
-
-                        String trimmed = jsonString.trim();
-
-                        JsonParser parser = new JsonParser();
-
-                        JsonElement jsonElement = parser.parse(trimmed);
-
-                        Utils.sendWebhook(jsonElement, AIOMVigilanceConfig.webhookLink);
-                    }
+                    Discord.alert("Failsafe Alert | Macro Stopped", "The macro has stopped due to bedrock being detected in front of the player.");
                 }
             }
             if (AIOMVigilanceConfig.jacobfailsafe) {
@@ -140,19 +129,7 @@ public class Failsafe {
                             }
                         }
                     }
-                    if (AIOMVigilanceConfig.webhookAlerts) {
-
-                        String screenshotLink = Objects.requireNonNull(Utils.takeScreenshot()).replace("\"", "");
-
-                        String jsonString = "{\"content\":null,\"embeds\":[{\"title\":\"Failsafe Alert | Macro Paused\",\"description\":\"The macro has paused due to a jacob's\\nevent starting.\\n\\nAccount: " + Main.mcPlayer.getName() + "\",\"color\":5814783,\"author\":{\"name\":\"AIO-Macro\"},\"image\":{\"url\":\"" + screenshotLink + "\"}}]}\n";
-
-                        String trimmed = jsonString.trim();
-
-                        JsonParser parser = new JsonParser();
-
-                        JsonElement jsonElement = parser.parse(trimmed);
-                        Utils.sendWebhook(jsonElement, AIOMVigilanceConfig.webhookLink);
-                    }
+                    Discord.alert("Failsafe Alert | Macro Paused", "The macro has paused due to a jacob's event starting.");
                 }
             }
             if (AIOMVigilanceConfig.islandfailsafe != 2) {
@@ -167,20 +144,7 @@ public class Failsafe {
 
                         MacroHandler.toggleMacro();
 
-                        if (AIOMVigilanceConfig.webhookAlerts) {
-
-                            String screenshotLink = Objects.requireNonNull(Utils.takeScreenshot()).replace("\"", "");
-
-                            String jsonString = "{\"content\":null,\"embeds\":[{\"title\":\"Failsafe Alert | Macro Stopped\",\"description\":\"The macro has stopped due to not\\nbeing on your island.\\n\\nAccount: " + Main.mcPlayer.getName() + "\",\"color\":5814783,\"author\":{\"name\":\"AIO-Macro\"},\"image\":{\"url\":\"" + screenshotLink + "\"}}]}\n";
-
-                            String trimmed = jsonString.trim();
-
-                            JsonParser parser = new JsonParser();
-
-                            JsonElement jsonElement = parser.parse(trimmed);
-
-                            Utils.sendWebhook(jsonElement, AIOMVigilanceConfig.webhookLink);
-                        }
+                        Discord.alert("Failsafe Alert | Macro Stopped", "The macro has stopped due to not being on your island.");
                     }
                     if (AIOMVigilanceConfig.islandfailsafe == 1) {
                         Main.sendMarkedChatMessage("Macro Paused! | " + EnumChatFormatting.RED + "FAILSAFE You are not on your island!");
@@ -190,20 +154,7 @@ public class Failsafe {
                             goToIsland = true;
                         }
 
-                        if (AIOMVigilanceConfig.webhookAlerts) {
-
-                            String screenshotLink = Objects.requireNonNull(Utils.takeScreenshot()).replace("\"", "");
-
-                            String jsonString = "{\"content\":null,\"embeds\":[{\"title\":\"Failsafe Alert | Macro Paused\",\"description\":\"The macro has paused due to not\\nbeing on your island.\\n\\nAccount: " + Main.mcPlayer.getName() + "\",\"color\":5814783,\"author\":{\"name\":\"AIO-Macro\"},\"image\":{\"url\":\"" + screenshotLink + "\"}}]}\n";
-
-                            String trimmed = jsonString.trim();
-
-                            JsonParser parser = new JsonParser();
-
-                            JsonElement jsonElement = parser.parse(trimmed);
-
-                            Utils.sendWebhook(jsonElement, AIOMVigilanceConfig.webhookLink);
-                        }
+                        Discord.alert("Failsafe Alert | Macro Paused", "The macro has paused due to not being on your island.");
                     }
                 }
             }
@@ -216,20 +167,7 @@ public class Failsafe {
                     goToIsland = true;
                 }
 
-                if (AIOMVigilanceConfig.webhookAlerts) {
-
-                    String screenshotLink = Objects.requireNonNull(Utils.takeScreenshot()).replace("\"", "");
-
-                    String jsonString = "{\"content\":null,\"embeds\":[{\"title\":\"Failsafe Alert | Macro Paused\",\"description\":\"The macro has paused due to the\\nplayer being de-synced.\\n\\nAccount: " + Main.mcPlayer.getName() + "\",\"color\":5814783,\"author\":{\"name\":\"AIO-Macro\"},\"image\":{\"url\":\"" + screenshotLink + "\"}}]}\n";
-
-                    String trimmed = jsonString.trim();
-
-                    JsonParser parser = new JsonParser();
-
-                    JsonElement jsonElement = parser.parse(trimmed);
-
-                    Utils.sendWebhook(jsonElement, AIOMVigilanceConfig.webhookLink);
-                }
+                Discord.alert("Failsafe Alert | Macro Paused", "The macro has paused due to the player being de-synced.");
             }
             if (AIOMVigilanceConfig.banwaveFailsafe && recentBans >= AIOMVigilanceConfig.banWavePlayers) {
                 Main.sendMarkedChatMessage("Macro Disabled! | " + EnumChatFormatting.RED + "FAILSAFE A ban wave is occurring! Leaving SkyBlock.");
@@ -238,52 +176,17 @@ public class Failsafe {
 
                 Main.mcPlayer.sendChatMessage("/l");
 
-                if (AIOMVigilanceConfig.webhookAlerts) {
-
-                    String screenshotLink = Objects.requireNonNull(Utils.takeScreenshot()).replace("\"", "");
-
-                    String jsonString = "{\"content\":null,\"embeds\":[{\"title\":\"Failsafe Alert | Macro Paused\",\"description\":\"The macro has paused due to a\\nban wave being activated.\\n\\nAccount: " + Main.mcPlayer.getName() + "\",\"color\":5814783,\"author\":{\"name\":\"AIO-Macro\"},\"image\":{\"url\":\"" + screenshotLink + "\"}}]}\n";
-
-                    String trimmed = jsonString.trim();
-
-                    JsonParser parser = new JsonParser();
-
-                    JsonElement jsonElement = parser.parse(trimmed);
-
-                    Utils.sendWebhook(jsonElement, AIOMVigilanceConfig.webhookLink);
-                }
+                Discord.alert("Failsafe Alert | Macro Paused", "The macro has paused due to a ban wave being activated.");
             }
-            if (AIOMVigilanceConfig.autoWebhook != 0 && ((Utils.currentTimeMillis() - MacroHandler.macroStartMillis) / 60000 % AIOMVigilanceConfig.autoWebhook) == 0 && AIOMVigilanceConfig.webhookAlerts && (Utils.currentTimeMillis() - MacroHandler.macroStartMillis) >= 60000) {
-
-                String screenshotLink = Objects.requireNonNull(Utils.takeScreenshot()).replace("\"", "");
-
-                String jsonString = "{\"content\":null,\"embeds\":[{\"title\":\"Failsafe Alert | Automatic Webhook\",\"description\":\"The macro has not been stopped\\nthe automatic timer has passed.\\n\\nAccount: " + Main.mcPlayer.getName() + "\",\"color\":5814783,\"author\":{\"name\":\"AIO-Macro\"},\"image\":{\"url\":\"" + screenshotLink + "\"}}]}\n";
-
-                String trimmed = jsonString.trim();
-
-                JsonParser parser = new JsonParser();
-
-                JsonElement jsonElement = parser.parse(trimmed);
-
-                Utils.sendWebhook(jsonElement, AIOMVigilanceConfig.webhookLink);
-
+            // Auto status every X minutes: once per interval
+            long minutesRunning = (Utils.currentTimeMillis() - MacroHandler.macroStartMillis) / 60000;
+            if (AIOMVigilanceConfig.autoWebhook != 0 && minutesRunning >= 1 && minutesRunning % AIOMVigilanceConfig.autoWebhook == 0 && minutesRunning != lastAutoWebhookMinute) {
+                lastAutoWebhookMinute = minutesRunning;
+                Discord.alert("Automatic Status", "The macro is still running (" + minutesRunning + " minutes so far).");
             }
             if (AIOMVigilanceConfig.autoDisable != 0 && ((Utils.currentTimeMillis() - MacroHandler.macroStartMillis) / 60000 % AIOMVigilanceConfig.autoDisable) == 0 && (Utils.currentTimeMillis() - MacroHandler.macroStartMillis) >= 60000) {
                 MacroHandler.toggleMacro();
-                if (AIOMVigilanceConfig.webhookAlerts) {
-
-                    String screenshotLink = Objects.requireNonNull(Utils.takeScreenshot()).replace("\"", "");
-
-                    String jsonString = "{\"content\":null,\"embeds\":[{\"title\":\"Failsafe Alert | Macro Stopped\",\"description\":\"The macro has stopped due to the\\nautomatic timer ending.\\n\\nAccount: " + Main.mcPlayer.getName() + "\",\"color\":5814783,\"author\":{\"name\":\"AIO-Macro\"},\"image\":{\"url\":\"" + screenshotLink + "\"}}]}\n";
-
-                    String trimmed = jsonString.trim();
-
-                    JsonParser parser = new JsonParser();
-
-                    JsonElement jsonElement = parser.parse(trimmed);
-
-                    Utils.sendWebhook(jsonElement, AIOMVigilanceConfig.webhookLink);
-                }
+                Discord.alert("Failsafe Alert | Macro Stopped", "The macro has stopped due to the automatic timer ending.");
             }
         }
     }
@@ -334,19 +237,7 @@ public class Failsafe {
                                 }
                             }
                         }
-                        if (AIOMVigilanceConfig.webhookAlerts) {
-
-                            String screenshotLink = Objects.requireNonNull(Utils.takeScreenshot()).replace("\"", "");
-
-                            String jsonString = "{\"content\":null,\"embeds\":[{\"title\":\"Failsafe Alert | Macro Paused\",\"description\":\"The macro has unpaused due to a jacob's\\nevent ending.\\n\\nAccount: " + Main.mcPlayer.getName() + "\",\"color\":5814783,\"author\":{\"name\":\"AIO-Macro\"},\"image\":{\"url\":\"" + screenshotLink + "\"}}]}\n";
-
-                            String trimmed = jsonString.trim();
-
-                            JsonParser parser = new JsonParser();
-
-                            JsonElement jsonElement = parser.parse(trimmed);
-                            Utils.sendWebhook(jsonElement, AIOMVigilanceConfig.webhookLink);
-                        }
+                        Discord.alert("Failsafe Alert | Macro Unpaused", "The macro has unpaused due to a jacob's event ending.");
                     }
                 }
                 banWaveTick++;
@@ -392,21 +283,7 @@ public class Failsafe {
                                                     break;
                                                 case ("status"):
                                                     Main.sendMarkedChatMessage("Macro Status Sent! | Remote Controlling");
-                                                    if (!AIOMVigilanceConfig.webhookLink.equals("")) {
-                                                        String screenshotLink = Objects.requireNonNull(Utils.takeScreenshot()).replace("\"", "");
-
-                                                        String jsonString = "{\"content\":null,\"embeds\":[{\"title\":\"Macro Status Report\",\"description\":\"A macro status report was requested.\\nMacro Enabled: " + MacroHandler.isMacroOn + "\\n\\nAccount: " + Main.mcPlayer.getName() + "\",\"color\":5814783,\"author\":{\"name\":\"AIO-Macro\"},\"image\":{\"url\":\"" + screenshotLink + "\"}}]}\n";
-
-                                                        String trimmed = jsonString.trim();
-
-                                                        JsonParser parser = new JsonParser();
-
-                                                        JsonElement jsonElement = parser.parse(trimmed);
-
-                                                        Utils.sendWebhook(jsonElement, AIOMVigilanceConfig.webhookLink);
-                                                    } else {
-                                                        Main.sendMarkedChatMessage("Failed to send status alert. Invalid webhook.");
-                                                    }
+                                                    Discord.alert("Macro Status Report", "A macro status report was requested. Macro Enabled: " + MacroHandler.isMacroOn);
                                                     gotMacroStatus = true;
                                                     break;
                                             }

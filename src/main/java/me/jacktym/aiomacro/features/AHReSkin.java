@@ -1,6 +1,7 @@
 package me.jacktym.aiomacro.features;
 
 
+import me.jacktym.aiomacro.util.SignInput;
 import gg.essential.universal.UResolution;
 import me.jacktym.aiomacro.Main;
 import me.jacktym.aiomacro.NGGlobal;
@@ -153,9 +154,9 @@ public class AHReSkin {
                 try {
                     if (ahSearch.equals("")) {
                         Main.mc.currentScreen.onGuiClosed();
-                    } else if (BazaarFlipper.currentSign != null) {
-                        BazaarFlipper.currentSign.signText[0] = new ChatComponentText(ahSearch);
-                        if (BazaarFlipper.currentSign.signText[0].equals(new ChatComponentText(ahSearch))) {
+                    } else if (SignInput.currentSign != null) {
+                        SignInput.currentSign.signText[0] = new ChatComponentText(ahSearch);
+                        if (SignInput.currentSign.signText[0].equals(new ChatComponentText(ahSearch))) {
                             Main.mc.currentScreen.onGuiClosed();
                         }
                     }

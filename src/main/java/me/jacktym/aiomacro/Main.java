@@ -157,11 +157,13 @@ public class Main {
         registry.add(new OneRow());
         registry.add(new SerpentineFarm());
         registry.add(new PumpkinMelon());
+        registry.add(new DiscordBot());
+        registry.add(new RemoteMovement());
+        registry.add(new me.jacktym.aiomacro.rendering.InventoryPreview());
         registry.add(new AntiStuck());
         registry.add(new Nuker());
         registry.add(new SetPlayerLook());
         registry.add(new CropAura());
-        registry.add(new BazaarFlipper());
         registry.add(new Main());
         registry.add(new CaneBuilder());
         registry.add(new AutoBazaarUnlocker());
@@ -203,7 +205,7 @@ public class Main {
 
         StencilEffect.Companion.enableStencil();
 
-        ClientProxy.keyBindings = new KeyBinding[10];
+        ClientProxy.keyBindings = new KeyBinding[11];
 
         ClientProxy.keyBindings[0] = new KeyBinding("Toggle Macro", Keyboard.KEY_DELETE, "All-In-One Macro");
         ClientProxy.keyBindings[1] = new KeyBinding("Open Gui", Keyboard.KEY_BACKSLASH, "All-In-One Macro");
@@ -215,6 +217,7 @@ public class Main {
         ClientProxy.keyBindings[7] = new KeyBinding("Refresh Diana Waypoints", Keyboard.KEY_PAUSE, "All-In-One Macro");
         ClientProxy.keyBindings[8] = new KeyBinding("Toggle Packet Cancelling", Keyboard.KEY_END, "All-In-One Macro");
         ClientProxy.keyBindings[9] = new KeyBinding("Toggle Path Recording", Keyboard.KEY_F8, "All-In-One Macro");
+        ClientProxy.keyBindings[10] = new KeyBinding("Preview Inventory (hold)", Keyboard.KEY_LMENU, "All-In-One Macro");
 
         for (int i = 0; i < ClientProxy.keyBindings.length; i++) {
             ClientRegistry.registerKeyBinding(ClientProxy.keyBindings[i]);
@@ -225,7 +228,8 @@ public class Main {
     public void postInit(FMLPostInitializationEvent postEvent) {
         proxy.postInit(postEvent);
 
-        Utils.updateBazaarApi();
+        // Hypixel bazaar prices are not downloaded: this fork is used on Fakepixel, where they don't apply,
+        // and downloading them every 2 seconds cost ~1 GB of data per hour.
 
         RenderPlayer slim_render = Main.mc.getRenderManager().getSkinMap().get("slim");
         slim_render.addLayer(new CosmeticRendering(slim_render));

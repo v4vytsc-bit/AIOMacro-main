@@ -22,7 +22,7 @@ public class CarpentryMacro {
 
     @SubscribeEvent
     public void clientTick(TickEvent.ClientTickEvent e) {
-        if (Main.notNull && MacroHandler.isMacroOn && AIOMVigilanceConfig.macroType == 8) {
+        if (Main.notNull && MacroHandler.isMacroOn && AIOMVigilanceConfig.macroType == 7) {
             ticks++;
             if (ticks >= AIOMVigilanceConfig.carpentryMacroSpeed) {
                 ticks = 0;

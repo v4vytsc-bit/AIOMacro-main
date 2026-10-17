@@ -16,7 +16,7 @@ public class Scatha {
 
     @SubscribeEvent
     public void clientTickEvent(TickEvent.ClientTickEvent e) {
-        if (Main.notNull && AIOMVigilanceConfig.macroType == 7 && MacroHandler.isMacroOn) {
+        if (Main.notNull && AIOMVigilanceConfig.macroType == 6 && MacroHandler.isMacroOn) {
             KeyBinding.setKeyBindState(Main.mc.gameSettings.keyBindForward.getKeyCode(), true);
 
             BlockPos playerPos = new BlockPos(Main.mcPlayer.getPositionVector());

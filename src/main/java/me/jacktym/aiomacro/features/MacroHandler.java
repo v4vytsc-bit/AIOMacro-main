@@ -12,6 +12,8 @@ import java.util.HashMap;
 public class MacroHandler {
 
     public static long macroStartMillis;
+    // Time the macro ran before the current run, since the game started (for !time)
+    public static long previousRunsMillis = 0;
 
     public static boolean isMacroOn = false;
     public static boolean isNetherWart = false;
@@ -39,6 +41,11 @@ public class MacroHandler {
         KeyBinding.setKeyBindState(Main.mc.gameSettings.keyBindBack.getKeyCode(), false);
         KeyBinding.setKeyBindState(Main.mc.gameSettings.keyBindAttack.getKeyCode(), false);
         return false;
+    }
+
+    // Total macro running time since the game started, including the current run
+    public static long totalRunMillis() {
+        return previousRunsMillis + (isMacroOn ? Utils.currentTimeMillis() - macroStartMillis : 0);
     }
 
     public static void toggleMacro() {
@@ -88,11 +95,11 @@ public class MacroHandler {
                 if (AIOMVigilanceConfig.ungrab) {
                     Utils.unGrab();
                 }
-            } else if (AIOMVigilanceConfig.macroType == 6) {
+            } else if (AIOMVigilanceConfig.macroType == 5) {
                 MinionAura.recentClickedEntity = null;
                 MinionAura.claimedMinions.clear();
                 MinionAura.inMinion = false;
-            } else if (AIOMVigilanceConfig.macroType == 10) {
+            } else if (AIOMVigilanceConfig.macroType == 9) {
                 SugarCane.left = true;
                 isCocoaBean = true;
                 SetPlayerLook.setDefault();
@@ -100,7 +107,7 @@ public class MacroHandler {
                 if (AIOMVigilanceConfig.ungrab) {
                     Utils.unGrab();
                 }
-            } else if (AIOMVigilanceConfig.macroType == 12) {
+            } else if (AIOMVigilanceConfig.macroType == 11) {
                 SerpentineFarm.start(false);
                 isSerpentine = true;
                 SetPlayerLook.setDefault();
@@ -108,7 +115,7 @@ public class MacroHandler {
                 if (AIOMVigilanceConfig.ungrab) {
                     Utils.unGrab();
                 }
-            } else if (AIOMVigilanceConfig.macroType == 13) { // Mushroom Serpentine
+            } else if (AIOMVigilanceConfig.macroType == 12) { // Mushroom Serpentine
                 SerpentineFarm.start(true);
                 isSerpentine = true;
                 SetPlayerLook.setDefault();
@@ -116,7 +123,7 @@ public class MacroHandler {
                 if (AIOMVigilanceConfig.ungrab) {
                     Utils.unGrab();
                 }
-            } else if (AIOMVigilanceConfig.macroType == 14) {
+            } else if (AIOMVigilanceConfig.macroType == 13) {
                 PumpkinMelon.start();
                 isPumpkinMelon = true;
                 SetPlayerLook.setDefault();
@@ -124,7 +131,7 @@ public class MacroHandler {
                 if (AIOMVigilanceConfig.ungrab) {
                     Utils.unGrab();
                 }
-            } else if (AIOMVigilanceConfig.macroType == 11) {
+            } else if (AIOMVigilanceConfig.macroType == 10) {
                 OneRow.forwards = true;
                 isOneRow = true;
                 SetPlayerLook.setDefault();
@@ -135,6 +142,7 @@ public class MacroHandler {
             }
             Main.sendMarkedChatMessage("Macro Enabled!");
         } else if (isMacroOn) {
+            previousRunsMillis += Utils.currentTimeMillis() - macroStartMillis;
             Main.sendMarkedChatMessage("Macro Disabled!");
             KeyBinding.setKeyBindState(Main.mc.gameSettings.keyBindRight.getKeyCode(), false);
             KeyBinding.setKeyBindState(Main.mc.gameSettings.keyBindBack.getKeyCode(), false);
@@ -161,23 +169,6 @@ public class MacroHandler {
             if (AIOMVigilanceConfig.ungrab) {
                 Utils.reGrab();
             }
-
-            BazaarFlipper.currentManagedStack  = null;
-            BazaarFlipper.manageOrderPhase = 0;
-            BazaarFlipper.manageOrders = false;
-            BazaarFlipper.doOrders = false;
-            BazaarFlipper.buyFills = new ArrayList<>();
-            BazaarFlipper.sellFills = new ArrayList<>();
-            BazaarFlipper.buyOrders = new HashMap<>();
-            BazaarFlipper.sellOrders = new HashMap<>();
-            BazaarFlipper.buyCuts = new ArrayList<>();
-            BazaarFlipper.sellCuts = new ArrayList<>();
-            BazaarFlipper.buyClaims = new ArrayList<>();
-            BazaarFlipper.sellClaims = new ArrayList<>();
-            BazaarFlipper.key = "";
-            BazaarFlipper.orderNum = 0;
-            BazaarFlipper.coolDownWaitTime = 0;
-            BazaarFlipper.sentWaitMessage = false;
         }
     }
 }

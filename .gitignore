@@ -23,3 +23,6 @@ run
 
 # local build JDK
 .jdk
+
+# Built-in Discord bot token (never commit)
+discord-bot.properties
