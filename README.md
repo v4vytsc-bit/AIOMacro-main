@@ -19,7 +19,7 @@ It's a modified fork of [JackTYM's AIO-Macro](https://github.com/JackTYM) with p
 - [Inventory preview](#-inventory-preview)
 - [Failsafes](#%EF%B8%8F-failsafes)
 - [Other features](#-other-features)
-- [Settings reference](#%EF%B8%8F-settings-reference) · [Keybinds](#%EF%B8%8F-keybinds) · [Commands](#-in-game-commands)
+- [Settings reference](#%EF%B8%8F-settings-reference) · [All settings](#-all-settings) · [Keybinds](#%EF%B8%8F-keybinds) · [Commands](#-in-game-commands)
 - [Install](#-install) · [Build from source](#%EF%B8%8F-build-from-source)
 - [Known issues](#-known-issues) · [Changelog](#-changelog)
 
@@ -343,6 +343,258 @@ Open the settings with **`\`** (backslash) or `/aiom`.
 | Account Linking | **Remote Controlling** | The original author's remote control — **off by default**; use the Discord bot instead |
 | Debugging | **Turn Speed** | Fastest allowed turn |
 | Debugging | **Developer Mode** | Step-by-step macro notes in chat — turn off for a clean chat (also `!config <name> devmode off`) |
+
+<!-- settings:start (generated from AIOMVigilanceConfig.java) -->
+## 📋 All settings
+
+Every setting in the menu (`\` or `/aiom`), grouped like the menu. Settings marked 💬 can also be changed from Discord with [`!config`](#changing-settings-from-discord).
+
+### Macro Settings
+
+| Setting | Values | Default | What it does |
+|---|---|---|---|
+| **Macro Type** 💬 | Netherwart/S-Shaped · Sugarcane · Nuker · Fairy Soul Aura · Shiny Pig ESP · Minion Aura · Scatha Macro · Carpentry Macro · Auction Flipper · Cocoa Bean · One Row · Serpentine (Layered) · Mushroom Serpentine · Pumpkin/Melon | Netherwart/S-Shaped | Choose the macro you would like to use. |
+| **Pitch Angle** 💬 | text | 0 | Sets the value you are looking up and down (Check f3). -90 to 90, decimals allowed (e.g. 2.5). |
+| **Yaw Angle** 💬 | text | 0 | Sets the value you are looking left to right (Check f3). -180 to 180, decimals allowed (e.g. -90.35). |
+| **Auto God Potion** | on / off | off | Automatically buys and consumes a God Potion. (Requires gold in purse). |
+| **Auto Booster Cookie** | on / off | off | Automatically buys and consumes a Booster Cookie. (Requires gold in purse). |
+| **Fast Break** | on / off | off | Breaks crops at 40bps to allow for faster rancher boot speeds |
+| **Fast Break BPS** | 20bps · 40bps · 60bps · 80bps | 20bps | How many blocks per second (20 Ticks) Fast Break breaks. |
+| **Auto Sell Minimum** | 0 – 10 | 0 | The minimum amount of stacks to automatically sell (Cookie Only, 0 To Disable) |
+| **Drop 180** | on / off | off | Does a 180 turn after dropping during a farming macro |
+| **Ungrab** | on / off | off | Ungrabs your mouse when using a farming macro |
+| **Macro On** | button |  | Toggles the macro on and off |
+| **Auto Combine Same Books** | on / off | off | Combines same books when in an anvil. |
+| **Auto Combine Rune** | on / off | off | Combines same runes when in a rune pedestal. |
+| **Auto Jerry Box** | on / off | off | Automatically uses jerry boxes in your hot bar. |
+| **Serpentine First Row**<br><sub>Serpentine (Layered)</sub> 💬 | Left (A) · Right (D) | Left (A) | Which way to strafe along the first row (the row you start the macro on). |
+| **Serpentine First Layer Shift**<br><sub>Serpentine (Layered)</sub> 💬 | Backward (S) · Forward (W) | Backward (S) | How to step onto the next row on the first layer. Flips automatically every time you drop to a new layer. |
+| **Serpentine Row Shift**<br><sub>Serpentine (Layered)</sub> 💬 | 1 – 10 | 3 | How many blocks to walk forward/back to get from one row onto the next. |
+| **Water Column Exit Side**<br><sub>Serpentine (Layered)</sub> 💬 | Opposite Way · Same Way · Left (A) · Right (D) | Left (A) | Mushroom Serpentine only: which way to step out at the top of the water column. Left/Right always go that way; Opposite/Same are relative to the last bottom-layer row. |
+| **After Walk-Back Step**<br><sub>Serpentine (Layered)</sub> 💬 | Forward (W) · Back (S) · No Step | Forward (W) | When stuck, the macro walks back once until the walkway opens up. Then it steps to the next row this way (like a normal row change). |
+| **After Walk-Back Strafe**<br><sub>Serpentine (Layered)</sub> 💬 | Left (A) · Right (D) · Toward The Opening | Left (A) | Which way to strafe along the row after walking back (and stepping). |
+| **Pumpkin/Melon First Direction**<br><sub>Pumpkin/Melon</sub> 💬 | Left (A) · Right (D) | Right (D) | Which way to strafe along the row you start on. Turns around automatically after every drop. |
+| **Look Turn Time Min**<br><sub>Look Turning</sub> 💬 | 0 – 5000 | 0 | Shortest time (ms) a turn to the set pitch/yaw takes. 0 = normal speed. Turning never goes faster than Turn Speed. |
+| **Look Turn Time Max**<br><sub>Look Turning</sub> 💬 | 0 – 5000 | 0 | Longest time (ms) a turn to the set pitch/yaw takes. Each turn picks a random time between Min and Max. |
+| **Look Turn Order**<br><sub>Look Turning</sub> 💬 | Both Together · Pitch Then Yaw · Yaw Then Pitch · Random Order | Both Together | Turn pitch and yaw at the same time, one after the other, or pick an order at random for every turn. |
+
+### Failsafes
+
+| Setting | Values | Default | What it does |
+|---|---|---|---|
+| **Webhook Alerts**<br><sub>Webhooks</sub> | on / off | off | Sends webhook on failsafe, message, party invite, island visit, etc. |
+| **Webhook Link**<br><sub>Webhooks</sub> | text | empty | Link to send webhook alerts to. |
+| **Test Webhook**<br><sub>Webhooks</sub> | button |  | Sends a test message to the webhook provided. |
+| **Auto Webhook** | 0 – 360 | 0 | How often to automatically send a webhook (0 to disable) |
+| **Random Delay Minimum** | 100 – 5000 | 1000 | The Minimum Random Delay (Milliseconds). |
+| **Random Delay Maximum** | 100 – 5000 | 2000 | The Maximum Random Delay (Milliseconds). |
+| **Auto Disable** | 0 – 360 | 0 | How long to farm until disabling (0 to disable) |
+| **Island Failsafe** | Stop Farming · Teleport To Island · Disable | Stop Farming | Triggers when not on island. |
+| **Jacob Failsafe** | on / off | off | Stops farming during Jacob's contests. |
+| **Bedrock Failsafe** | on / off | off | Stops farming when looking at bedrock. |
+| **Set Spawn** 💬 | on / off | off | Sets your island spawn after each row (Used to infinite farm when using teleport to island failsafe). |
+| **Play Sound** | on / off | off | Plays a sound to alert you when a failsafe is triggered. |
+| **AntiStuck** 💬 | on / off | off | Detects when a player is stuck and attempts to unstick them. |
+| **AntiStuck Jump** | on / off | off | Includes jumping in AntiStuck motion (helpful in some farms, unhelpful in others). |
+| **Desync Failsafe** | on / off | off | Detects when a player desyncs from farming and resyncs. |
+| **Banwave Failsafe** | on / off | off | Detects when a banwave is in place, stops macroing, and leaves SkyBlock. |
+| **Minimum Bans** | 1 – 5 | 3 | The minimum bans to trigger the banwave failsafe. |
+
+### Discord Bot
+
+| Setting | Values | Default | What it does |
+|---|---|---|---|
+| **Discord Bot Enabled** | on / off | on | Lets your group control your macro from Discord (!help for commands) and posts alerts there. Uses the bot built into this jar unless you fill in your own below. |
+| **Bot Token** | text (hidden) | empty | Leave empty to use the bot built into this jar. Only fill in to use a different bot (Developer Portal > Bot > Reset Token). Keep it secret. |
+| **Channel ID** | text | empty | Leave empty to use the built-in channel. Only fill in to use a different channel (right-click it > Copy Channel ID). |
+| **Send Alerts To Bot Channel** 💬 | on / off | on | Post failsafe alerts (with a game screenshot) in the bot's channel. |
+| **Alert Ping** 💬 | No Ping · @here · @everyone | No Ping | Who to ping when an alert is posted in the bot's channel. |
+| **Test Discord Bot** | button |  | Sends a test message to the channel and tells you in chat whether it worked. |
+| **Activity Updates**<br><sub>Activity Updates</sub> | on / off | on | Posts to the activity webhook when you join or leave a server and when you start or stop the macro. |
+| **Activity Webhook Link**<br><sub>Activity Updates</sub> | text (hidden) | empty | Leave empty to use the activity webhook built into this jar. Fill in to send updates somewhere else. |
+| **Test Activity Webhook**<br><sub>Activity Updates</sub> | button |  | Sends a test update and tells you in chat whether it worked. |
+
+### Inventory Preview
+
+| Setting | Values | Default | What it does |
+|---|---|---|---|
+| **Inventory Preview** | on / off | on | Hold the Preview Inventory key (Left Alt by default, change it in Controls) to see your inventory without opening it. Macros keep running. |
+| **Inventory Preview Opacity** | 10 – 100 | 55 | How solid the preview's background is (percent). Lower = more see-through. |
+
+### Farming HUD
+
+| Setting | Values | Default | What it does |
+|---|---|---|---|
+| **Toggle Farming HUD** | on / off | off | Toggles showing of the Farming HUD. |
+| **Farming HUD X** | 0 – ? | 0 | Sets the X value of farming hud. |
+| **Farming HUD Y** | 0 – ? | 0 | Sets the Y value of farming hud. |
+| **Change Farming HUD Position** | button |  | Changes the position of the Farming HUD. |
+| **Reset Farming HUD Position** | button |  | Resets the position of the Farming HUD. |
+| **Total Profit**<br><sub>Profit</sub> | on / off | off | Displays how much profit you have made farming so far. |
+| **Profit Per Hour**<br><sub>Profit</sub> | on / off | off | Displays how much profit you make every hour. |
+| **Profit Per 12 Hours**<br><sub>Profit</sub> | on / off | off | Displays how much profit you make every 12 hours. |
+| **Profit Per 24 Hours**<br><sub>Profit</sub> | on / off | off | Displays how much profit you make every 24 hours. |
+| **Crops Per Hour**<br><sub>Profit</sub> | on / off | off | Displays how many crops you yield in an hour. |
+| **Total Final Crops Yielded**<br><sub>Statistics</sub> | on / off | off | Displays how many final crop upgrades you yielded. |
+| **Mathematical Hoe Counter**<br><sub>Statistics</sub> | on / off | off | Displays the counter on your mathematical hoe. |
+| **God Potion Time**<br><sub>Failsafes</sub> | on / off | off | Displays time remaining on God Potion. |
+| **Booster Cookie Time**<br><sub>Failsafes</sub> | on / off | off | Displays time remaining on Booster Cookie. |
+| **Jacobs Farming Event Timers**<br><sub>Failsafes</sub> | on / off | off | Displays time until Jacob's Farming Event Starts/Ends. |
+| **Total Farming Time**<br><sub>Failsafes</sub> | on / off | off | Displays total time spent macroing. |
+| **HUD Text Color**<br><sub>Color</sub> | colour |  | Sets the color for the HUD Text. |
+
+### Nuker
+
+| Setting | Values | Default | What it does |
+|---|---|---|---|
+| **Nuker Block** | Mycelium · Red Sand · Wood · Any Crop But Cane / Cactus · Cane/Cactus · Hoe Plow · Custom Nuker | Mycelium | Chooses the block to be nuked. |
+| **Custom Nuker Block** | text | empty | A custom block name to nuke. |
+| **Stay on Y Level** | on / off | off | Does not mine any blocks below your y level |
+| **Nuker BPS** | 20bps · 40bps · 60bps · 80bps | 20bps | How many blocks per second (20 Ticks) Nuker breaks. |
+| **Next Block Color** | colour |  | Sets the color displayed on the next nuked block. |
+
+### Debugging
+
+| Setting | Values | Default | What it does |
+|---|---|---|---|
+| **Developer Mode** 💬 | on / off | off | Used to print to the logs to debug. |
+| **Turn Speed** 💬 | 1 – 50 | 10 | How fast you turn |
+| **Test Look Omg!?!?** | button |  | Epic Gamering. |
+| **Show Block Pos Omg!?!?** | button |  | Epic Gamering. |
+| **Auto Wheat Phase**<br><sub>Auto Wheat</sub> | 0 · 1 · 2 · 3 · 4 · 5 · 6 · 7 · 8 · 9 · 10 · 11 · 12 · 13 · 14 · 15 · 16 · 17 · 18 · 19 · 20 · 21 · 22 · 23 · 24 · 25 · 26 · 27 · 28 · 29 · 30 | 0 | Sets what phase to start the auto wheat on |
+| **Auto Wheat Private Lobby Mode**<br><sub>Auto Wheat</sub> | on / off | off | Instead of using private lobbies, switches between private ones (requires rank) [WIP!!!] |
+| **Auto Wheat Omg!?!?**<br><sub>Auto Wheat</sub> | button |  | Epic Gamering. |
+
+### Cane Builder
+
+| Setting | Values | Default | What it does |
+|---|---|---|---|
+| **Cane Builder Layers** | 1 – 9 | 1 | How many layers to build |
+| **Crop Aura BPS** | 20bps · 40bps · 60bps · 80bps | 20bps | How many blocks per second (20 Ticks) Crop Aura places. |
+| **Toggle Cane Builder** | button |  | Omg Free Money |
+| **Crop Aura Toggle** | button |  | Epic Gamering. |
+| **Cane Builder Phase**<br><sub>Debug</sub> | 0 · 1 · 2 · 3 · 4 · 5 · 6 · 7 · 8 · 9 · 10 · 11 · 12 · 13 · 14 · 15 · 16 · 17 · 18 · 19 · 20 · 21 · 22 · 23 · 24 · 25 · 26 · 27 · 28 · 29 · 30 | 0 | Sets what phase to start the cane builder on |
+
+### Account Linking
+
+| Setting | Values | Default | What it does |
+|---|---|---|---|
+| **AIOM Linking Code** | text | empty | Get in the AIOM Discord by running /link |
+| **Remote Controlling** | on / off | off | Allows your account to be controlled remotely via the discord bot (Only through a linked account) |
+| **Link Account** | button |  | Links your Discord account to your Minecraft using the link code |
+| **Unlink Account** | button |  | Unlinks your Discord account from your Minecraft |
+
+### Rendering
+
+| Setting | Values | Default | What it does |
+|---|---|---|---|
+| **Enable Rendering** | on / off | on | Disables all rendering, can be used to fix rendering bugs. |
+| **Path Recording Points Per Block**<br><sub>Path Recording</sub> | 1 – 10 | 1 | How many points per block the path recorder records. More points = more data = smoother |
+| **Clear Recorded Paths**<br><sub>Path Recording</sub> | button |  | Deletes current path recording |
+
+### Quality Of Life
+
+| Setting | Values | Default | What it does |
+|---|---|---|---|
+| **Auto Reopen AH**<br><sub>Auctions</sub> | on / off | off | Automatically reopens the Auction House when buying an item. (Useful for spam buying items to flip) |
+| **Auction House Search Extension**<br><sub>Auctions</sub> | on / off | off | Enables the AH Search Extension to find specific items easier. |
+| **Auction House Re-skin**<br><sub>Auctions</sub> | on / off | off | Re-skins the Auction House. |
+| **Saved HotBar Data**<br><sub>Automatic HotBar</sub> | text | empty | WARNING: Do Not Edit! Editing Can Cause Unwanted Effects! |
+| **HotBar Profile One**<br><sub>Automatic HotBar</sub> | text | empty | The EXACT name of the hotbar profile (saved with /aiom hotbar save {name} and find through /aiom hotbar list). |
+| **HotBar Profile Two**<br><sub>Automatic HotBar</sub> | text | empty | The EXACT name of the hotbar profile (saved with /aiom hotbar save {name} and find through /aiom hotbar list). |
+| **HotBar Profile Three**<br><sub>Automatic HotBar</sub> | text | empty | The EXACT name of the hotbar profile (saved with /aiom hotbar save {name} and find through /aiom hotbar list). |
+| **Automatic Floor 7 Callout | Crystal Phase / P1**<br><sub>Auto F7 Callouts</sub> | text | empty | The text to automatically callout when entering Phase 1 of the Floor 7 Boss Fight |
+| **Automatic Floor 7 Callout | Crusher Phase / P2**<br><sub>Auto F7 Callouts</sub> | text | empty | The text to automatically callout when entering Phase 2 of the Floor 7 Boss Fight |
+| **Automatic Floor 7 Callout | Terminal Phase / P3**<br><sub>Auto F7 Callouts</sub> | text | empty | The text to automatically callout when entering Phase 3 of the Floor 7 Boss Fight |
+| **Automatic Floor 7 Callout | Final Phase / P4**<br><sub>Auto F7 Callouts</sub> | text | empty | The text to automatically callout when entering Phase 4 of the Floor 7 Boss Fight |
+| **Skyblock AntiKB** | on / off | off | Toggles AntiKB Inside of SkyBlock (Disabled when holding jerry-chine [vertical only], bonzo staff, or grappling hook |
+| **Dungeon Door Aura** | on / off | off | Automatically clicks on wither/blood doors in range of the player |
+| **Hide Summons** | on / off | off | Stops summoned mobs from rendering 10+ blocks away. |
+| **Auto Close Chest** | on / off | off | Automatically closes dungeon chests |
+| **Auto Salvage** | on / off | off | Automatically salvages bad dungeon items |
+| **KeyBind VerticalClip Amount**<br><sub>VerticalClip</sub> | text | empty | Changes the clip amount of VClip on the KeyBind |
+| **KeyBind HorizontalClip Amount**<br><sub>HorizontalClip</sub> | text | empty | Changes the clip amount of HClip on the KeyBind |
+| **Crypt ESP**<br><sub>ESP</sub> | on / off | off | Highlights crypts in dungeons |
+| **ESP Color**<br><sub>ESP</sub> | colour |  | The color of the ESP outline |
+| **Water Puzzle Aura**<br><sub>Dungeon Solvers</sub> | on / off | off | Auto solves water, provided you follow the instructions |
+| **Water Duration**<br><sub>Dungeon Solvers</sub> | 2 – 5 | 2 | The amount of water that is allowed to flow- adjust based on ping etc. (NOT IN SECONDS.) \n DO NOT CHANGE THIS MID SOLVE, IT WILL BREAK. CHANGE THIS BEFORE A RUN OR DURING AN UNSOLVED GATE. |
+| **Username Hider**<br><sub>Username Hider</sub> | on / off | off | Hides your actual username anywhere it is displayed. |
+| **Username Replacement**<br><sub>Username Hider</sub> | text | empty | What your username is replaced with when username hider is enabled |
+
+### TPS Viewer
+
+| Setting | Values | Default | What it does |
+|---|---|---|---|
+| **TPS Viewer** | on / off | off | Shows the current server TPS |
+| **Change Location** | button |  | Sets the Server TPS HUD Location |
+| **TPS Viewer Color** | colour |  | Sets the Server TPS Text Color |
+| **TPS Viewer X** | 0 – ? | 0 | Sets the X value of tps viewer. |
+| **TPS Viewer Y** | 0 – ? | 0 | Sets the Y value of tps viewer. |
+
+### ESP
+
+| Setting | Values | Default | What it does |
+|---|---|---|---|
+| **Dungeon Mob ESP** | on / off | off | Shows starred mobs, bats, fels, mini-bosses, through walls. |
+| **Slayer Boss ESP** | on / off | off | Shows slayer minibosses and bosses through walls. |
+| **Show Hidden Mobs** | on / off | off | Shows invisible mobs like fels, shadow assassins, blood mobs, ghosts. |
+| **Crystal Hollows ESP** | on / off | off | Shows Corleone, Team Treasurite, Automaton, Goblins, Sludges, Yog, Bal, and Butterflies through walls. |
+| **ESP Color** | colour |  | Sets the ESP Outline Color |
+| **ESP Color** | 1 – 20 | 10 | Sets the ESP Outline Color |
+
+### Diana
+
+| Setting | Values | Default | What it does |
+|---|---|---|---|
+| **Diana Waypoints On** | on / off | off | Enables Diana Waypoints |
+| **Diana Show Guess** | on / off | off | Enables Diana Waypoint Guesses |
+| **Enable Burrow Aura** | on / off | off | Enables Burrow Aura |
+| **Use Echo After Burrow** | on / off | off | Uses the Echo ability after uncovering a burrow |
+
+### Carpentry
+
+| Setting | Values | Default | What it does |
+|---|---|---|---|
+| **Carpentry Backpack Slot** | 1 – 16 | 1 | Selects the backpack slot that the carpentry macro outputs diamond blocks to. |
+| **Carpentry Tick Rate** | 10 – 200 | 100 | Changes the carpentry macro speed. |
+
+### Kuudra
+
+| Setting | Values | Default | What it does |
+|---|---|---|---|
+| **Auto Ready**<br><sub>Settings</sub> | on / off | off | DEV: auto ready for kuudra testing |
+| **Auto Aim**<br><sub>Settings</sub> | on / off | off | Auto Aims at the Kuudra withers (I think broken fixed soon tm?) |
+
+### Packets
+
+- **Toggle Cancelling** (on / off, default off) — Toggles the cancelling of packets.
+
+<details><summary><b>Outgoing</b> — 23 “Cancel …” switches (default off)</summary>
+
+`C0APacketAnimation`, `C0BPacketEntityAction`, `C0CPacketInput`, `C0DPacketCloseWindow`, `C0EPacketClickWindow`, `C0FPacketConfirmTransaction`, `C00PacketKeepAlive`, `C01PacketChatMessage`, `C02PacketUseEntity`, `C03PacketPlayer`, `C07PacketPlayerDigging`, `C08PacketPlayerBlockPlacement`, `C09PacketHeldItemChange`, `C10PacketCreativeInventoryAction`, `C11PacketEnchantItem`, `C12PacketUpdateSign`, `C13PacketPlayerAbilities`, `C14PacketTabComplete`, `C15PacketClientSettings`, `C16PacketClientStatus`, `C17PacketCustomPayload`, `C18PacketSpectate`, `C19PacketResourcePackStatus`
+
+</details>
+
+<details><summary><b>Incoming</b> — 71 “Cancel …” switches (default off)</summary>
+
+`S0APacketUseBed`, `S0BPacketAnimation`, `S0CPacketSpawnPlayer`, `S0DPacketCollectItem`, `S0EPacketSpawnObject`, `S0FPacketSpawnMob`, `S00PacketKeepAlive`, `S1BPacketEntityAttach`, `S1CPacketEntityMetadata`, `S1DPacketEntityEffect`, `S1EPacketRemoveEntityEffect`, `S1FPacketSetExperience`, `S01PacketJoinGame`, `S2APacketParticles`, `S2BPacketChangeGameState`, `S2CPacketSpawnGlobalEntity`, `S2DPacketOpenWindow`, `S2EPacketCloseWindow`, `S2FPacketSetSlot`, `S02PacketChat`, `S3APacketTabComplete`, `S3BPacketScoreboardObjective`, `S3CPacketUpdateScore`, `S3DPacketDisplayScoreboard`, `S3EPacketTeams`, `S3FPacketCustomPayload`, `S03PacketTimeUpdate`, `S04PacketEntityEquipment`, `S05PacketSpawnPosition`, `S06PacketUpdateHealth`, `S07PacketRespawn`, `S08PacketPlayerPosLook`, `S09PacketHeldItemChange`, `S10PacketSpawnPainting`, `S11PacketSpawnExperienceOrb`, `S12PacketEntityVelocity`, `S13PacketDestroyEntities`, `S14PacketEntity`, `S18PacketEntityTeleport`, `S19PacketEntityHeadLook`, `S19PacketEntityStatus`, `S20PacketEntityProperties`, `S21PacketChunkData`, `S22PacketMultiBlockChange`, `S23PacketBlockChange`, `S24PacketBlockAction`, `S25PacketBlockBreakAnim`, `S26PacketMapChunkBulk`, `S27PacketExplosion`, `S28PacketEffect`, `S29PacketSoundEffect`, `S30PacketWindowItems`, `S31PacketWindowProperty`, `S32PacketConfirmTransaction`, `S33PacketUpdateSign`, `S34PacketMaps`, `S35PacketUpdateTileEntity`, `S36PacketSignEditorOpen`, `S37PacketStatistics`, `S38PacketPlayerListItem`, `S39PacketPlayerAbilities`, `S40PacketDisconnect`, `S41PacketServerDifficulty`, `S42PacketCombatEvent`, `S43PacketCamera`, `S44PacketWorldBorder`, `S45PacketTitle`, `S46PacketSetCompressionLevel`, `S47PacketPlayerListHeaderFooter`, `S48PacketResourcePackSend`, `S49PacketUpdateEntityNBT`
+
+</details>
+
+### Auction Flipper
+
+| Setting | Values | Default | What it does |
+|---|---|---|---|
+| **Auction Flipper Server Link** | text | localhost:4321 | The link to the server running AIOM Auction Flipper (Check #self-hosting-auction-flip-guide in the discord) |
+| **Maximum Price** | text | 10000000 | The maximum price to purchase an item |
+| **Minimum Profit** | text | 1 | The minimum profit margins to purchase an item |
+| **Claim and Relist** | on / off | off | Allows the flipper to automatically relist the item at it's Lowest BIN Price |
+| **Claim Relist Tick Speed** | 0 – 100 | 10 | Changes how fast the macro claims and relists (DOES NOT AFFECT BUYING SPEED!) |
+| **Buy Pet Skins** | on / off | off | Allows the flipper to buy pet skins. |
+| **Buy Potential Manipulations** | on / off | off | Allows the flipper to buy items marked as potential manipulations. |
+| **Send Status Messages** | on / off | on | Sends the current status in chat whenever a new thing is happening (waiting, buying, listing etc) |
+
+<!-- settings:end -->
 
 ## ⌨️ Keybinds
 
