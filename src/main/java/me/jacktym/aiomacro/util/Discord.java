@@ -7,13 +7,7 @@ import com.google.gson.JsonParser;
 import me.jacktym.aiomacro.Main;
 import me.jacktym.aiomacro.config.AIOMVigilanceConfig;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.ScreenShotHelper;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -23,11 +17,9 @@ import java.util.Properties;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 /**
- * Sends messages to Discord, through the Discord bot (control channel) and/or the webhook.
- * Screenshots are taken of the Minecraft window only and attached directly to the message.
+ * Sends messages to Discord: the bot's control channel, the alert webhook and the activity webhook.
  * All network work happens on a background thread so the game never freezes.
  */
 public class Discord {
@@ -36,6 +28,12 @@ public class Discord {
     private static final String USER_AGENT = "DiscordBot (https://github.com/JackTYM, 1.0)";
     private static final int EMBED_COLOR = 5814783;
     private static final String[] PINGS = {"", "@here", "@everyone"};
+
+    // Activity update colours
+    public static final int GREEN = 0x3BA55C;
+    public static final int RED = 0xED4245;
+    public static final int BLUE = 0x5865F2;
+    public static final int GREY = 0x99AAB5;
 
     private static final ExecutorService sender = Executors.newSingleThreadExecutor(runnable -> {
         Thread thread = new Thread(runnable, "AIOM Discord Sender");
@@ -61,13 +59,17 @@ public class Discord {
         return !isBlank(BUILT_IN.getProperty("token")) && !isBlank(BUILT_IN.getProperty("channel_id"));
     }
 
-    // A token/channel typed into the settings wins; otherwise the one built into the jar is used
+    // A value typed into the settings wins; otherwise the one built into the jar is used
     public static String botToken() {
         return !isBlank(AIOMVigilanceConfig.discordBotToken) ? AIOMVigilanceConfig.discordBotToken.trim() : BUILT_IN.getProperty("token", "").trim();
     }
 
     public static String channelId() {
         return !isBlank(AIOMVigilanceConfig.discordChannelId) ? AIOMVigilanceConfig.discordChannelId.trim() : BUILT_IN.getProperty("channel_id", "").trim();
+    }
+
+    public static String activityWebhook() {
+        return !isBlank(AIOMVigilanceConfig.activityWebhookLink) ? AIOMVigilanceConfig.activityWebhookLink.trim() : BUILT_IN.getProperty("activity_webhook", "").trim();
     }
 
     public static boolean botConfigured() {
@@ -78,10 +80,7 @@ public class Discord {
         return AIOMVigilanceConfig.webhookAlerts && !isBlank(AIOMVigilanceConfig.webhookLink);
     }
 
-    /**
-     * Failsafe / status alert: goes to the bot's channel (if the bot sends alerts) and to the webhook (if set up),
-     * with a screenshot of the game.
-     */
+    /** Failsafe / status alert: goes to the bot's channel (if the bot sends alerts) and to the alert webhook (if set up). */
     public static void alert(String title, String description) {
         boolean toBot = botConfigured() && AIOMVigilanceConfig.discordBotAlerts;
         boolean toWebhook = webhookConfigured();
@@ -89,16 +88,28 @@ public class Discord {
             return;
         }
         JsonObject embed = embed(title, description + "\n\nAccount: " + playerName());
-        byte[] screenshot = captureScreenshot();
         sender.submit(() -> {
             if (toBot) {
                 String ping = PINGS[Math.max(0, Math.min(PINGS.length - 1, AIOMVigilanceConfig.discordAlertPing))];
-                logFailure("Discord bot", sendToChannel(ping, embed, screenshot));
+                logFailure("Discord bot", sendToChannel(ping, embed, null));
             }
             if (toWebhook) {
-                logFailure("Webhook", sendToWebhook(embed, screenshot));
+                logFailure("Webhook", sendToWebhook(AIOMVigilanceConfig.webhookLink, embed));
             }
         });
+    }
+
+    /** Activity update (joined / left / macro started / stopped) for the activity webhook. */
+    public static void activity(String text, int color) {
+        String link = activityWebhook();
+        if (!AIOMVigilanceConfig.activityUpdates || isBlank(link)) {
+            return;
+        }
+        JsonObject embed = new JsonObject();
+        embed.addProperty("description", text);
+        embed.addProperty("color", color);
+        embed.addProperty("timestamp", java.time.Instant.now().toString());
+        sender.submit(() -> logFailure("Activity webhook", sendToWebhook(link, embed)));
     }
 
     // Test buttons: send in the background and say in chat whether it worked
@@ -110,8 +121,7 @@ public class Discord {
             return;
         }
         JsonObject embed = embed("Test Message", "The AIOM Discord bot is connected.\nType !help here to see the commands.\n\nAccount: " + playerName());
-        byte[] screenshot = captureScreenshot();
-        sender.submit(() -> reportTest("Discord bot", sendToChannel("", embed, screenshot)));
+        sender.submit(() -> reportTest("Discord bot", sendToChannel("", embed, null)));
     }
 
     public static void testWebhook() {
@@ -120,13 +130,24 @@ public class Discord {
             return;
         }
         JsonObject embed = embed("Test Message | No Actions Done", "A webhook test was requested. No actions were taken.\n\nAccount: " + playerName());
-        byte[] screenshot = captureScreenshot();
-        sender.submit(() -> reportTest("Webhook", sendToWebhook(embed, screenshot)));
+        sender.submit(() -> reportTest("Webhook", sendToWebhook(AIOMVigilanceConfig.webhookLink, embed)));
+    }
+
+    public static void testActivityWebhook() {
+        String link = activityWebhook();
+        if (isBlank(link)) {
+            Main.sendMarkedChatMessage("Activity webhook: this jar has none built in. Paste an Activity Webhook Link first.");
+            return;
+        }
+        JsonObject embed = new JsonObject();
+        embed.addProperty("description", "🧪 **" + playerName() + "** - activity updates test");
+        embed.addProperty("color", BLUE);
+        sender.submit(() -> reportTest("Activity webhook", sendToWebhook(link, embed)));
     }
 
     // Reply in the bot's channel from any thread, without waiting
     public static void replyAsync(String text, String replyTo) {
-        sender.submit(() -> logFailure("Discord bot", sendToChannel("", embed("AIO-Macro", text), null, replyTo)));
+        sender.submit(() -> logFailure("Discord bot", sendToChannel("", embed("AIO-Macro", text), replyTo)));
     }
 
     public static JsonObject embed(String title, String description) {
@@ -140,13 +161,8 @@ public class Discord {
         return embed;
     }
 
-    /** Posts to the bot's control channel. Returns null on success, otherwise what went wrong. */
-    public static String sendToChannel(String content, JsonObject embed, byte[] screenshot) {
-        return sendToChannel(content, embed, screenshot, null);
-    }
-
-    /** Same, as a reply to the message with id replyTo (shows the command it answers). */
-    public static String sendToChannel(String content, JsonObject embed, byte[] screenshot, String replyTo) {
+    /** Posts to the bot's control channel, optionally as a reply to replyTo. Returns null on success, otherwise what went wrong. */
+    public static String sendToChannel(String content, JsonObject embed, String replyTo) {
         JsonObject payload = new JsonObject();
         if (replyTo != null) {
             JsonObject reference = new JsonObject();
@@ -162,29 +178,23 @@ public class Discord {
         }
         allowedMentions.add("parse", parse);
         payload.add("allowed_mentions", allowedMentions);
-        String url = API + "/channels/" + channelId() + "/messages";
-        return post(url, "Bot " + botToken(), withEmbed(payload, embed, screenshot), screenshot);
+        addEmbed(payload, embed);
+        return post(API + "/channels/" + channelId() + "/messages", "Bot " + botToken(), payload);
     }
 
-    /** Posts to the webhook. Returns null on success, otherwise what went wrong. */
-    public static String sendToWebhook(JsonObject embed, byte[] screenshot) {
+    /** Posts to a webhook. Returns null on success, otherwise what went wrong. */
+    public static String sendToWebhook(String link, JsonObject embed) {
         JsonObject payload = new JsonObject();
-        return post(AIOMVigilanceConfig.webhookLink.trim(), null, withEmbed(payload, embed, screenshot), screenshot);
+        addEmbed(payload, embed);
+        return post(link.trim(), null, payload);
     }
 
-    private static JsonObject withEmbed(JsonObject payload, JsonObject embed, byte[] screenshot) {
+    private static void addEmbed(JsonObject payload, JsonObject embed) {
         if (embed != null) {
-            JsonObject copy = new JsonParser().parse(embed.toString()).getAsJsonObject();
-            if (screenshot != null) {
-                JsonObject image = new JsonObject();
-                image.addProperty("url", "attachment://screenshot.jpg");
-                copy.add("image", image);
-            }
             JsonArray embeds = new JsonArray();
-            embeds.add(copy);
+            embeds.add(embed);
             payload.add("embeds", embeds);
         }
-        return payload;
     }
 
     /** GET for the bot. Returns the response body, or throws with Discord's error. */
@@ -213,31 +223,21 @@ public class Discord {
         }
     }
 
-    // Sends the message as multipart/form-data so the screenshot can be attached directly
-    private static String post(String url, String authorization, JsonObject payload, byte[] screenshot) {
+    private static String post(String url, String authorization, JsonObject payload) {
         try {
-            String boundary = "AIOM" + System.currentTimeMillis();
             HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
             connection.setConnectTimeout(10_000);
             connection.setReadTimeout(20_000);
             connection.setRequestProperty("User-Agent", USER_AGENT);
-            connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+            connection.setRequestProperty("Content-Type", "application/json");
             if (authorization != null) {
                 connection.setRequestProperty("Authorization", authorization);
             }
-
             try (OutputStream out = connection.getOutputStream()) {
-                writePart(out, boundary, "Content-Disposition: form-data; name=\"payload_json\"\r\nContent-Type: application/json\r\n\r\n");
                 out.write(payload.toString().getBytes(StandardCharsets.UTF_8));
-                if (screenshot != null) {
-                    writePart(out, boundary, "Content-Disposition: form-data; name=\"files[0]\"; filename=\"screenshot.jpg\"\r\nContent-Type: image/jpeg\r\n\r\n");
-                    out.write(screenshot);
-                }
-                out.write(("\r\n--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
             }
-
             int code = connection.getResponseCode();
             if (code >= 400) {
                 return "HTTP " + code + " " + readBody(connection.getErrorStream());
@@ -249,60 +249,12 @@ public class Discord {
         }
     }
 
-    private static void writePart(OutputStream out, String boundary, String headers) throws Exception {
-        out.write(("\r\n--" + boundary + "\r\n" + headers).getBytes(StandardCharsets.UTF_8));
-    }
-
     private static String readBody(InputStream stream) {
         if (stream == null) {
             return "";
         }
         try (Scanner scanner = new Scanner(stream, "UTF-8")) {
             return scanner.useDelimiter("\\A").hasNext() ? scanner.next() : "";
-        }
-    }
-
-    /**
-     * Screenshot of the Minecraft window only (not the desktop), as a small JPEG.
-     * Must run on the game thread, so from other threads it is handed to the game and waited for.
-     */
-    public static byte[] captureScreenshot() {
-        try {
-            Minecraft mc = Minecraft.getMinecraft();
-            if (mc.theWorld == null) {
-                return null;
-            }
-            File file = mc.addScheduledTask(() -> {
-                File dir = new File(System.getProperty("java.io.tmpdir"), "aiom-shots");
-                //noinspection ResultOfMethodCallIgnored
-                new File(dir, "screenshots").mkdirs();
-                String name = "shot-" + System.nanoTime() + ".png";
-                ScreenShotHelper.saveScreenshot(dir, name, mc.displayWidth, mc.displayHeight, mc.getFramebuffer());
-                return new File(new File(dir, "screenshots"), name);
-            }).get(5, TimeUnit.SECONDS);
-
-            BufferedImage original = ImageIO.read(file);
-            //noinspection ResultOfMethodCallIgnored
-            file.delete();
-            if (original == null) {
-                return null;
-            }
-
-            // Scale down to at most 1280 wide and save as JPEG to keep uploads small
-            double scale = Math.min(1.0, 1280.0 / original.getWidth());
-            int width = (int) (original.getWidth() * scale);
-            int height = (int) (original.getHeight() * scale);
-            BufferedImage small = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-            Graphics2D graphics = small.createGraphics();
-            graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            graphics.drawImage(original, 0, 0, width, height, null);
-            graphics.dispose();
-
-            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-            ImageIO.write(small, "jpg", bytes);
-            return bytes.toByteArray();
-        } catch (Exception e) {
-            return null;
         }
     }
 

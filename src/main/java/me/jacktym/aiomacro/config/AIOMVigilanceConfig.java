@@ -118,13 +118,31 @@ public class AIOMVigilanceConfig extends Vigilant {
     public static int serpentineRowShift = 3;
     @Property(
             type = PropertyType.SELECTOR,
-            name = "Water Column Exit",
-            description = "Mushroom Serpentine only: after swimming up, step out going the opposite way to the last bottom-layer row (turn around) or the same way.",
+            name = "Water Column Exit Side",
+            description = "Mushroom Serpentine only: which way to step out at the top of the water column. Left/Right always go that way; Opposite/Same are relative to the last bottom-layer row.",
             category = "Macro Settings",
             subcategory = "Serpentine (Layered)",
-            options = {"Opposite Way", "Same Way"}
+            options = {"Opposite Way", "Same Way", "Left (A)", "Right (D)"}
     )
-    public static int serpentineWaterExit = 0;
+    public static int serpentineWaterExit = 2;
+    @Property(
+            type = PropertyType.SELECTOR,
+            name = "After Walk-Back Step",
+            description = "When stuck, the macro walks back once until the walkway opens up. Then it steps to the next row this way (like a normal row change).",
+            category = "Macro Settings",
+            subcategory = "Serpentine (Layered)",
+            options = {"Forward (W)", "Back (S)", "No Step"}
+    )
+    public static int serpentineAfterWalkBackStep = 0;
+    @Property(
+            type = PropertyType.SELECTOR,
+            name = "After Walk-Back Strafe",
+            description = "Which way to strafe along the row after walking back (and stepping).",
+            category = "Macro Settings",
+            subcategory = "Serpentine (Layered)",
+            options = {"Left (A)", "Right (D)", "Toward The Opening"}
+    )
+    public static int serpentineAfterWalkBackStrafe = 0;
     @Property(
             type = PropertyType.SELECTOR,
             name = "Pumpkin/Melon First Direction",
@@ -287,6 +305,34 @@ public class AIOMVigilanceConfig extends Vigilant {
     )
     public final void testDiscordBot() {
         Discord.testBot();
+    }
+    @Property(
+            type = PropertyType.SWITCH,
+            name = "Activity Updates",
+            description = "Posts to the activity webhook when you join or leave a server and when you start or stop the macro.",
+            category = "Discord Bot",
+            subcategory = "Activity Updates"
+    )
+    public static boolean activityUpdates = true;
+    @Property(
+            type = PropertyType.TEXT,
+            name = "Activity Webhook Link",
+            description = "Leave empty to use the activity webhook built into this jar. Fill in to send updates somewhere else.",
+            category = "Discord Bot",
+            subcategory = "Activity Updates",
+            protectedText = true
+    )
+    public static String activityWebhookLink = "";
+    @Property(
+            type = PropertyType.BUTTON,
+            name = "Test Activity Webhook",
+            description = "Sends a test update and tells you in chat whether it worked.",
+            placeholder = "Send!",
+            category = "Discord Bot",
+            subcategory = "Activity Updates"
+    )
+    public final void testActivityWebhook() {
+        Discord.testActivityWebhook();
     }
 
     //Inventory Preview

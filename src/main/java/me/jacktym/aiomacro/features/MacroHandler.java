@@ -141,8 +141,10 @@ public class MacroHandler {
                 }
             }
             Main.sendMarkedChatMessage("Macro Enabled!");
+            ActivityTracker.macroStarted();
         } else if (isMacroOn) {
             previousRunsMillis += Utils.currentTimeMillis() - macroStartMillis;
+            ActivityTracker.macroStopped(Utils.currentTimeMillis() - macroStartMillis);
             Main.sendMarkedChatMessage("Macro Disabled!");
             KeyBinding.setKeyBindState(Main.mc.gameSettings.keyBindRight.getKeyCode(), false);
             KeyBinding.setKeyBindState(Main.mc.gameSettings.keyBindBack.getKeyCode(), false);

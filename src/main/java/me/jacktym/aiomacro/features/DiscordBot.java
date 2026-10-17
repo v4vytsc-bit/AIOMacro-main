@@ -44,10 +44,10 @@ public class DiscordBot {
     private static final String HELP = "**Commands** - `<name>` is the player's Minecraft name, or `all`\n"
             + "`!list <name>` - online and what the macro is doing (`!list all` = everyone)\n"
             + "`!time <name>` - how long the macro has been running (`!time all` = everyone)\n"
-            + "`!status <name>` - full status with a screenshot (`!status all` = one line each)\n"
+            + "`!status <name>` - full status (`!status all` = one line each)\n"
             + "`!start <name>` - start the macro selected in Macro Type\n"
             + "`!stop <name>` - stop the macro (or any movement)\n"
-            + "`!screenshot <name>` - screenshot of the game\n"
+            + "`!config <name>` - show settings, `!config <name> <setting> <value>` - change one, e.g. `!config Steve pitch 2.5`\n"
             + "`!move <name> <w|a|s|d> <blocks>` - walk, e.g. `!move Steve w 5` (macro must be stopped)\n"
             + "`!jump <name> [times]` - jump, e.g. `!jump Steve 3`\n"
             + "`!leave <name>` - stop the macro and leave the server\n"
@@ -152,43 +152,42 @@ public class DiscordBot {
             // Every command needs a player name (or all)
             case "!list":
                 if (needsName(target, "!list <name>", messageId) && isForMe(target)) {
-                    reply(onGameThread(DiscordBot::listLine), null, messageId);
+                    reply(onGameThread(DiscordBot::listLine), messageId);
                 }
                 break;
             case "!time":
                 if (needsName(target, "!time <name>", messageId) && isForMe(target)) {
-                    reply(onGameThread(DiscordBot::timeLine), null, messageId);
+                    reply(onGameThread(DiscordBot::timeLine), messageId);
                 }
                 break;
             case "!status":
-                // "all" gives one line per player; a single name gives the full status with a screenshot
+                // "all" gives one line per player; a single name gives the full status
                 if (needsName(target, "!status <name>", messageId) && isForMe(target)) {
                     if (isEveryone(target)) {
-                        reply(onGameThread(DiscordBot::listLine), null, messageId);
+                        reply(onGameThread(DiscordBot::listLine), messageId);
                     } else {
-                        reply(onGameThread(DiscordBot::statusText), Discord.captureScreenshot(), messageId);
+                        reply(onGameThread(DiscordBot::statusText), messageId);
                     }
                 }
                 break;
             case "!start":
                 if (needsName(target, "!start <name>", messageId) && isForMe(target)) {
-                    reply(onGameThread(() -> startMacro(from)), null, messageId);
+                    reply(onGameThread(() -> startMacro(from)), messageId);
                 }
                 break;
             case "!stop":
                 if (needsName(target, "!stop <name>", messageId) && isForMe(target)) {
-                    reply(onGameThread(() -> stopMacro(from)), null, messageId);
+                    reply(onGameThread(() -> stopMacro(from)), messageId);
                 }
                 break;
-            case "!screenshot":
-                if (needsName(target, "!screenshot <name>", messageId) && isForMe(target)) {
-                    byte[] screenshot = Discord.captureScreenshot();
-                    reply(screenshot != null ? "📸 Screenshot" : "⚠️ Couldn't take a screenshot (not on a server?).", screenshot, messageId);
+            case "!config":
+                if (needsName(target, "!config <name> [setting] [value]", messageId) && isForMe(target)) {
+                    reply(onGameThread(() -> configCommand(words, from)), messageId);
                 }
                 break;
             case "!leave":
                 if (needsName(target, "!leave <name>", messageId) && isForMe(target)) {
-                    reply(onGameThread(DiscordBot::stopAndLeave), null, messageId);
+                    reply(onGameThread(DiscordBot::stopAndLeave), messageId);
                 }
                 break;
             case "!move":
@@ -258,18 +257,18 @@ public class DiscordBot {
     // !move <name> <w|a|s|d> <blocks>
     private static void handleMove(String[] words, String from, String messageId) throws Exception {
         if (words.length < 4 || words[2].length() != 1 || "wasd".indexOf(Character.toLowerCase(words[2].charAt(0))) < 0) {
-            reply("Usage: `!move <name> <w|a|s|d> <blocks>`, e.g. `!move " + Discord.playerName() + " w 5`", null, messageId);
+            reply("Usage: `!move <name> <w|a|s|d> <blocks>`, e.g. `!move " + Discord.playerName() + " w 5`", messageId);
             return;
         }
         double blocks;
         try {
             blocks = Double.parseDouble(words[3].replace(',', '.'));
         } catch (NumberFormatException e) {
-            reply("⚠️ `" + words[3] + "` isn't a number of blocks.", null, messageId);
+            reply("⚠️ `" + words[3] + "` isn't a number of blocks.", messageId);
             return;
         }
         if (blocks < 0.5 || blocks > 64) {
-            reply("⚠️ Blocks must be between 0.5 and 64.", null, messageId);
+            reply("⚠️ Blocks must be between 0.5 and 64.", messageId);
             return;
         }
         char key = Character.toLowerCase(words[2].charAt(0));
@@ -283,7 +282,7 @@ public class DiscordBot {
             return reason;
         });
         if (problem != null) {
-            reply(problem, null, messageId);
+            reply(problem, messageId);
         }
     }
 
@@ -294,12 +293,12 @@ public class DiscordBot {
             try {
                 times = Integer.parseInt(words[2]);
             } catch (NumberFormatException e) {
-                reply("Usage: `!jump <name> [times]`, e.g. `!jump " + Discord.playerName() + " 3`", null, messageId);
+                reply("Usage: `!jump <name> [times]`, e.g. `!jump " + Discord.playerName() + " 3`", messageId);
                 return;
             }
         }
         if (times < 1 || times > 20) {
-            reply("⚠️ Jump between 1 and 20 times.", null, messageId);
+            reply("⚠️ Jump between 1 and 20 times.", messageId);
             return;
         }
         int count = times;
@@ -312,7 +311,27 @@ public class DiscordBot {
             return reason;
         });
         if (problem != null) {
-            reply(problem, null, messageId);
+            reply(problem, messageId);
+        }
+    }
+
+    // !config <name> shows the settings; !config <name> <setting> <value> changes one
+    private static String configCommand(String[] words, String from) {
+        if (words.length < 3) {
+            return RemoteConfig.show();
+        }
+        if (words.length < 4) {
+            return "Usage: `!config " + Discord.playerName() + " <setting> <value>`, e.g. `!config " + Discord.playerName() + " pitch 2.5`";
+        }
+        String value = String.join(" ", java.util.Arrays.copyOfRange(words, 3, words.length));
+        try {
+            String result = RemoteConfig.set(words[2], value);
+            if (!result.startsWith("⚠️")) {
+                Main.sendMarkedChatMessage("Setting changed from Discord (" + from + "): " + result);
+            }
+            return result;
+        } catch (RemoteConfig.BadValue e) {
+            return e.getMessage();
         }
     }
 
@@ -385,8 +404,8 @@ public class DiscordBot {
 
     // ---------- Sending ----------
 
-    private static void reply(String text, byte[] screenshot, String replyTo) {
-        String error = Discord.sendToChannel("", Discord.embed("AIO-Macro", text), screenshot, replyTo);
+    private static void reply(String text, String replyTo) {
+        String error = Discord.sendToChannel("", Discord.embed("AIO-Macro", text), replyTo);
         if (error != null) {
             System.out.println("[AIOM] Discord bot reply failed: " + error);
         }
@@ -413,7 +432,7 @@ public class DiscordBot {
             } catch (Exception ignored) {
                 // Couldn't check: reply anyway
             }
-            reply(text, null, commandId);
+            reply(text, commandId);
         }, delay, TimeUnit.MILLISECONDS);
     }
 

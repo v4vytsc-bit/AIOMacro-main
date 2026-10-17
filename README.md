@@ -2,7 +2,7 @@
 
 **An all-in-one SkyBlock farming & utility mod for Minecraft 1.8.9 (Forge) — tuned for Fakepixel.**
 
-Strafe farms, drop farms, water-column farms, single-row farms — pick a macro, type your angle, press **Delete**, and it farms. Run it from your phone through a **Discord bot** (even for a whole group of players), peek at your inventory without stopping, and get alerts with a screenshot when something goes wrong.
+Strafe farms, drop farms, water-column farms, single-row farms — pick a macro, type your angle, press **Delete**, and it farms. Run it from your phone through a **Discord bot** (even for a whole group of players), peek at your inventory without stopping, get alerts when something goes wrong, and see who's playing in an activity feed.
 
 It's a modified fork of [JackTYM's AIO-Macro](https://github.com/JackTYM) with precise decimal aiming, human-paced turning, three new farm layouts, Discord control and a much lighter footprint.
 
@@ -15,7 +15,7 @@ It's a modified fork of [JackTYM's AIO-Macro](https://github.com/JackTYM) with p
 - [What's new in this fork](#-whats-new-in-this-fork)
 - [Macros — every one explained](#-macros)
 - [Aiming & turning](#-aiming--turning)
-- [Discord bot](#-discord-bot) · [Webhook](#-webhook)
+- [Discord bot](#-discord-bot) · [Activity updates](#-activity-updates) · [Alert webhook](#-alert-webhook)
 - [Inventory preview](#-inventory-preview)
 - [Failsafes](#%EF%B8%8F-failsafes)
 - [Other features](#-other-features)
@@ -35,8 +35,8 @@ It's a modified fork of [JackTYM's AIO-Macro](https://github.com/JackTYM) with p
 | 🎃 | **Pumpkin/Melon** | One row per layer, any number of layers — strafe, fall down the chute, turn around. |
 | 🧭 | **Look Turning** | Slower, randomised turns (min–max time) and pitch/yaw together, one after the other, or random order. |
 | ⏳ | **Wait for the turn** | Farming macros stand still until you're looking at your angle, *then* start. |
-| 🤖 | **Discord bot** | Start/stop, status, screenshots, `!time`, walking, jumping and leaving — for many players on one bot. |
-| 📨 | **Working alerts** | Failsafe alerts reach Discord again (bot channel and/or webhook) with a Minecraft-only screenshot. |
+| 🤖 | **Discord bot** | Start/stop, status, `!time`, change settings with `!config`, walking, jumping and leaving — for many players on one bot. |
+| 📨 | **Alerts & activity** | Failsafe alerts reach Discord again, and an activity webhook shows who joined/left and who started/stopped the macro. |
 | 🎒 | **Inventory preview** | Hold Left Alt to see your inventory as an overlay — the macro keeps running. |
 | 🪶 | **Much lighter** | No more 1 GB/hour bazaar downloads, no game freezes when sending alerts, no AntiStuck slow-downs. |
 
@@ -141,7 +141,8 @@ For farms where you strafe along a row, step **forward or back** to the next row
 - **Drop** = landing more than 1.5 blocks lower. The forward/back step flips for the new layer.
 - Doesn't need to know how many rows or layers there are. If it can't step to another row (end of the farm), it stops and says so.
 - A short hiccup at the start of a row isn't treated as "stuck"; only a full second without getting anywhere hands over to AntiStuck.
-- **Settings:** *First Row* (A or D), *First Layer Shift* (S or W), *Row Shift* (blocks between rows).
+- **Stuck twice in a row** (can't move along the row at all): it walks back the way it came until the walkway opens up to the left or right, then steps to the next row like normal (**After Walk-Back Step**, default forward `W`) and strafes (**After Walk-Back Strafe**, default left `A`). If it gets stuck again soon after, it stops and tells you where.
+- **Settings:** *First Row* (A or D), *First Layer Shift* (S or W), *Row Shift* (blocks between rows), *After Walk-Back Step* (W / S / no step) and *After Walk-Back Strafe* (A / D / toward the opening).
 
 ### 12 · Mushroom Serpentine
 
@@ -153,11 +154,11 @@ BOTTOM LAYER  water column  ◄─────────  farm every row
 ```
 
 Serpentine on two layers that loops forever. Made for mushroom farms with a water column.
-- **Start on either layer.** It works out the water column by itself: water you *walk* into that carries on above your head is the way up; water you fall or sink into is a drop.
+- **Start on either layer.** It works out the water column by itself: water you *walk* into at the **bottom** of a column (floor below, water above your head) is the way up; walking into the **top** of a column (water below you), falling or sinking into water is the drop down — so one column can be used both ways.
 - At the end of the bottom layer it finds the column, either in line with the row or one block forward/back from where the row ends, and steps in.
-- Holds **jump** to swim up, and steps out only where there's open floor beside it at the top layer's height. **Water Column Exit** chooses the direction (default: opposite to the last bottom-layer row).
+- Holds **jump** to swim up, and steps out only where there's open floor beside it at the top layer's height. **Water Column Exit Side** chooses the direction (default: **left**).
 - The top layer has regrown by then, so it just keeps going. 🔁 If it can't get out at the top within a few seconds, it stops and says so.
-- **Settings:** the Serpentine settings plus *Water Column Exit*.
+- **Settings:** the Serpentine settings plus *Water Column Exit Side*.
 
 ### 13 · Pumpkin/Melon
 
@@ -194,10 +195,10 @@ Control the macro from a Discord channel and get alerts there — from your phon
 |---|---|
 | `!list <name>` | One line: online / macro running (which one, how long) / stopped. `!list all` = every player |
 | `!time <name>` | How long the macro has been running, plus total since the game started. `!time all` = every player |
-| `!status <name>` | Full status with a screenshot. `!status all` = one line per player |
+| `!status <name>` | Full status. `!status all` = one line per player |
 | `!start <name>` | Start the macro selected in *Macro Type* |
 | `!stop <name>` | Stop the macro (and cancel any movement) |
-| `!screenshot <name>` | Screenshot of that player's game |
+| `!config <name>` | Show that player's settings. `!config <name> <setting> <value>` changes one — see [Changing settings from Discord](#changing-settings-from-discord) |
 | `!move <name> <w\|a\|s\|d> <blocks>` | Walk, e.g. `!move Steve w 5` — relative to where they're looking; 0.5–64 blocks; macro must be stopped |
 | `!jump <name> [times]` | Jump, e.g. `!jump Steve 3` (1–20) |
 | `!leave <name>` | Stop the macro and leave the server (like pressing *Disconnect*) |
@@ -208,7 +209,29 @@ Control the macro from a Discord channel and get alerts there — from your phon
 - The player's game chat shows who used a command from Discord.
 - Moves/jumps queue up and report back when done (*"🚶 Moved 5 blocks forward (W)"* or *"⚠️ Stopped after 2.3 of 5 blocks…"*).
 
-**Alerts** — with **Send Alerts To Bot Channel** on, failsafe alerts (bedrock, not on island, Jacob's contest, desync, ban wave, auto-disable, auto status) are posted in the channel with a screenshot. **Alert Ping**: No Ping, `@here` or `@everyone`.
+**Alerts** — with **Send Alerts To Bot Channel** on, failsafe alerts (bedrock, not on island, Jacob's contest, desync, ban wave, auto-disable, auto status) are posted in the channel. **Alert Ping**: No Ping, `@here` or `@everyone`.
+
+### Changing settings from Discord
+
+`!config Steve` shows Steve's settings. `!config Steve <setting> <value>` changes one (saved just like in the menu; Steve's game chat says who changed what). `all` changes it for everyone.
+
+| Setting | Values | Example |
+|---|---|---|
+| `macro` | number or part of the name (macro must be stopped) | `!config Steve macro mushroom` |
+| `pitch` / `yaw` | −90…90 / −180…180, decimals OK (a running macro turns right away) | `!config Steve pitch 2.5` |
+| `rowshift` | 1–10 blocks | `!config Steve rowshift 6` |
+| `firstrow` | `left` / `right` | `!config Steve firstrow left` |
+| `firstshift` | `back` / `forward` | `!config Steve firstshift back` |
+| `waterexit` | `left` / `right` / `opposite` / `same` | `!config Steve waterexit left` |
+| `walkbackstep` | `forward` / `back` / `none` | `!config Steve walkbackstep forward` |
+| `walkbackstrafe` | `left` / `right` / `opening` | `!config Steve walkbackstrafe left` |
+| `pumpkindir` | `left` / `right` | `!config Steve pumpkindir right` |
+| `turnmin` / `turnmax` | 0–5000 ms | `!config Steve turnmax 1500` |
+| `turnorder` | `together` / `pitchfirst` / `yawfirst` / `random` | `!config Steve turnorder random` |
+| `turnspeed` | 1–50 | `!config Steve turnspeed 10` |
+| `antistuck` / `setspawn` / `alerts` | `on` / `off` | `!config all setspawn on` |
+| `ping` | `none` / `here` / `everyone` | `!config Steve ping here` |
+| `devmode` | `on` / `off` — step-by-step macro notes in chat | `!config Steve devmode off` |
 
 ### Setup — once, by whoever builds the jar
 
@@ -217,7 +240,7 @@ Players don't set anything up: the bot is **built into the jar**.
 1. [Discord Developer Portal](https://discord.com/developers/applications) → **New Application** → **Bot** → **Reset Token** (copy it) → turn on **Message Content Intent** → *Save*.
 2. **OAuth2 → URL Generator** → scope **bot** → permissions **View Channels, Send Messages, Read Message History, Embed Links, Attach Files** → open the link and add the bot to your server.
 3. Make a channel (e.g. `#aiom-control`), enable *Developer Mode* in Discord (*User Settings → Advanced*), right-click the channel → **Copy Channel ID**.
-4. In the project folder, copy **`discord-bot.example.properties`** to **`discord-bot.properties`** and fill in `token=` and `channel_id=`.
+4. In the project folder, copy **`discord-bot.example.properties`** to **`discord-bot.properties`** and fill in `token=` and `channel_id=` (and `activity_webhook=` for [activity updates](#-activity-updates)).
 5. [Build](#%EF%B8%8F-build-from-source) and hand out the jar. Every player who installs it is connected automatically (they can switch it off with **Discord Bot Enabled**).
 
 `discord-bot.properties` is git-ignored, so the token never ends up in the source code. Without that file, the jar has no built-in bot and players can still type a **Bot Token** and **Channel ID** into the settings themselves — those also override the built-in bot.
@@ -233,11 +256,19 @@ Players don't set anything up: the bot is **built into the jar**.
 - With lots of players on one bot (more than ~5), Discord slows the checks down, so replies can take a few extra seconds.
 - Problems (wrong token, no access to the channel, wrong channel ID) are shown once in game chat.
 
-## 📨 Webhook
+## 📣 Activity updates
 
-Prefer a plain webhook for alerts? **Failsafes → Webhooks**: turn on **Webhook Alerts**, paste a Discord **Webhook Link**, press **Test Webhook** (it tells you in chat whether it worked). It gets the same alerts as the bot channel. **Auto Webhook** (minutes) sends a "still running" status once per interval. Webhooks can only send — use the bot to control the macro.
+A webhook that posts what everyone's doing:
 
-Screenshots (bot and webhook) are taken of the **Minecraft window only** — never your desktop — and attached straight to the message. Sending happens in the background, so the game doesn't freeze.
+> 🟢 **Steve** joined `mc.fakepixel.me` · ▶️ **Steve** started **Mushroom Serpentine** · ⏹️ **Steve** stopped **Mushroom Serpentine** after 2h 5m · 🔴 **Steve** left `mc.fakepixel.me`
+
+- Make a webhook in Discord (*channel settings → Integrations → Webhooks → New Webhook → Copy Webhook URL*) and put it in `discord-bot.properties` as `activity_webhook=` before building — every jar then posts updates with no setup.
+- Players can switch it off (**Discord Bot → Activity Updates**) or send updates elsewhere (**Activity Webhook Link**). **Test Activity Webhook** checks it.
+- Moving between islands/lobbies on the same server doesn't count as leaving; closing the game while on a server does.
+
+## 📨 Alert webhook
+
+Prefer a plain webhook for failsafe alerts? **Failsafes → Webhooks**: turn on **Webhook Alerts**, paste a Discord **Webhook Link**, press **Test Webhook** (it tells you in chat whether it worked). It gets the same alerts as the bot channel. **Auto Webhook** (minutes) sends a "still running" status once per interval. Sending happens in the background, so the game doesn't freeze.
 
 ---
 
@@ -265,7 +296,7 @@ Hold **Left Alt** to see your whole inventory — armor, main inventory and hotb
 | **Auto Disable** | Stops the macro after X minutes |
 | **Random Delay Min/Max** | Random pauses between actions |
 | **Play Sound** | Plays a sound on failsafes |
-| **Alerts** | Bot channel and/or webhook, with a screenshot |
+| **Alerts** | Bot channel and/or alert webhook |
 
 ---
 
@@ -298,7 +329,8 @@ Open the settings with **`\`** (backslash) or `/aiom`.
 | Serpentine (Layered) | **First Row** | Strafe direction on your starting row |
 | Serpentine (Layered) | **First Layer Shift** | Backward (S) or Forward (W) to reach the next row on the first layer |
 | Serpentine (Layered) | **Row Shift** | Blocks between rows (1–10) |
-| Serpentine (Layered) | **Water Column Exit** | Mushroom Serpentine: Opposite Way (default) or Same Way |
+| Serpentine (Layered) | **Water Column Exit Side** | Mushroom Serpentine: which way to step out at the top: **Left (A)** (default), Right (D), or Opposite / Same as the last bottom row |
+| Serpentine (Layered) | **After Walk-Back Step / Strafe** | What to do after walking back when stuck (default: forward W, then left A) |
 | Pumpkin/Melon | **First Direction** | Left (A) or Right (D) |
 | Look Turning | **Turn Time Min / Max**, **Turn Order** | See [Aiming & turning](#-aiming--turning) |
 | Discord Bot | **Discord Bot Enabled** | On by default — uses the bot built into the jar |
@@ -306,9 +338,11 @@ Open the settings with **`\`** (backslash) or `/aiom`.
 | Discord Bot | **Send Alerts To Bot Channel**, **Alert Ping**, **Test Discord Bot** | |
 | Failsafes → Webhooks | **Webhook Alerts**, **Webhook Link**, **Test Webhook** | |
 | Failsafes | **Auto Webhook** | Status every X minutes (0 = off) |
+| Discord Bot → Activity Updates | **Activity Updates**, **Activity Webhook Link**, **Test Activity Webhook** | Uses the built-in activity webhook when the link is empty |
 | Inventory Preview | **Inventory Preview**, **Opacity** | |
 | Account Linking | **Remote Controlling** | The original author's remote control — **off by default**; use the Discord bot instead |
 | Debugging | **Turn Speed** | Fastest allowed turn |
+| Debugging | **Developer Mode** | Step-by-step macro notes in chat — turn off for a clean chat (also `!config <name> devmode off`) |
 
 ## ⌨️ Keybinds
 
@@ -385,7 +419,9 @@ src/main/java/me/jacktym/aiomacro/
 ├── features/DiscordBot.java          ← Discord bot commands
 ├── features/RemoteMovement.java      ← !move / !jump
 ├── rendering/InventoryPreview.java   ← inventory overlay
-└── util/Discord.java                 ← sending to Discord (bot + webhook), screenshots
+├── features/RemoteConfig.java       ← !config
+├── features/ActivityTracker.java     ← activity updates (joined / left / started / stopped)
+└── util/Discord.java                 ← sending to Discord (bot + webhooks), built-in bot settings
 ```
 
 `discord-bot.example.properties` (project root) → copy to `discord-bot.properties` to build the bot into the jar.
@@ -405,7 +441,8 @@ src/main/java/me/jacktym/aiomacro/
 
 | Build | What changed |
 |---|---|
-| **crelease5** | 🤖 Discord bot for many players (`!list` `!time` `!status` `!start` `!stop` `!screenshot` `!move` `!jump` `!leave` `!help`) · 📨 alerts & webhook fixed (Minecraft-only screenshots, no freezes, Auto Webhook once per interval) · 🎒 inventory preview · 🍄 Mushroom Serpentine climbs from either layer (Start Layer setting removed) · 🐌 fixed AntiStuck slowing rows down · 🪶 bazaar downloads and Bazaar Flipper removed · 🔒 old Remote Controlling off by default |
+| **crelease6** | ⚙️ `!config` to change settings from Discord · 📣 activity webhook (joined / left / started / stopped) · 🗑️ screenshots removed everywhere · 🔍 Serpentine Developer Mode notes · 🔁 when stuck it walks back once to find the row, and only stops if it's stuck again |
+| **crelease5** | 🤖 Discord bot for many players (`!list` `!time` `!status` `!start` `!stop` `!move` `!jump` `!leave` `!help`) · 📨 alerts & webhook fixed (no freezes, Auto Webhook once per interval) · 🎒 inventory preview · 🍄 Mushroom Serpentine climbs from either layer (Start Layer setting removed) · 🐌 fixed AntiStuck slowing rows down · 🪶 bazaar downloads and Bazaar Flipper removed · 🔒 old Remote Controlling off by default |
 | **crelease4** | 🎃 Pumpkin/Melon macro |
 | **crelease3** | 🍄 Mushroom Serpentine · 🧭 Look Turning (turn time & order) · ⏳ macros wait for the turn |
 | **crelease2** | 🐍 Serpentine (Layered) · 🎯 decimal Pitch/Yaw text boxes · build fixed for JDK 17 & dead repos |

@@ -25,7 +25,7 @@ import java.util.Random;
  */
 public class SerpentineFarm {
 
-    private enum State {FARM_ROW, PAUSE_BEFORE_SHIFT, SHIFT, PAUSE_BEFORE_ROW, CLIMB}
+    private enum State {FARM_ROW, PAUSE_BEFORE_SHIFT, SHIFT, PAUSE_BEFORE_ROW, CLIMB, WALK_BACK}
 
     public static boolean strafeLeft = true;
     public static boolean shiftForward = false;
@@ -48,6 +48,14 @@ public class SerpentineFarm {
     private static boolean walkedIntoWater = false;
     private static double waterEntryY = 0;
     private static Vec3 rowStart = null;
+    // Rows in a row that ended without moving along them (blocked on both sides = something's wrong)
+    private static int blockedRows = 0;
+    // One walk-back try when stuck; it's earned again after a few good rows
+    private static boolean walkBackUsed = false;
+    private static int goodRowsSinceWalkBack = 0;
+    private static boolean lastShiftForward = false;
+    private static boolean walkBackForward = false;
+    private static Vec3 walkBackStart = null;
     private static boolean exitLeft = false;
     private static double climbStartY = 0;
     private static double climbMaxY = 0;
@@ -72,6 +80,12 @@ public class SerpentineFarm {
         wasInWater = Main.mcPlayer.isInWater();
         walkedIntoWater = false;
         rowStart = Main.mcPlayer.getPositionVector();
+        blockedRows = 0;
+        walkBackUsed = false;
+        goodRowsSinceWalkBack = 0;
+        lastShiftForward = !shiftForward;
+        debug("start: strafing " + strafeName(strafeLeft) + ", rows step " + (shiftForward ? "forward (W)" : "back (S)")
+                + ", " + (twoLayers ? "mushroom 2-layer loop" : "layered"));
     }
 
     @SubscribeEvent
@@ -117,12 +131,42 @@ public class SerpentineFarm {
                 // Right after a drop we're already against the end wall, so any stop counts.
                 boolean movedAlongRow = distanceAlongStrafe(player, rowStart) >= 1.0;
                 if (stillTicks >= 3 && stateTicks >= 10 && (movedAlongRow || justLanded || stillTicks >= 20)) {
-                    if (!movedAlongRow && !justLanded && AIOMVigilanceConfig.antiStuckFailsafe) {
-                        // Stood still for a second without getting anywhere: something is in the way
-                        setMovement(false, false, false, false);
-                        AntiStuck.antistuckOn = true;
-                        enter(State.FARM_ROW);
-                        return;
+                    double along = distanceAlongStrafe(player, rowStart);
+                    if (!movedAlongRow && !justLanded) {
+                        blockedRows++;
+                        debug("blocked strafing " + strafeName(strafeLeft) + " after " + format(along) + " blocks at " + where(player)
+                                + " (" + blockedRows + "x in a row)");
+                        if (blockedRows >= 2) {
+                            setMovement(false, false, false, false);
+                            if (!walkBackUsed) {
+                                // Walk back the way we came until the walkway opens up to the left or right
+                                walkBackUsed = true;
+                                goodRowsSinceWalkBack = 0;
+                                walkBackForward = !lastShiftForward;
+                                walkBackStart = player.getPositionVector();
+                                debug("stuck: walking back " + (walkBackForward ? "forward (W)" : "back (S)") + " to find the row");
+                                enter(State.WALK_BACK);
+                                return;
+                            }
+                            Main.sendMarkedChatMessage("Serpentine: can't move along the row here (blocked at " + where(player)
+                                    + "), even after walking back. Check Pitch/Yaw and First Row, or what's in the way. Stopping.");
+                            MacroHandler.toggleMacro();
+                            return;
+                        }
+                        if (AIOMVigilanceConfig.antiStuckFailsafe) {
+                            // Stood still for a second without getting anywhere: something is in the way
+                            setMovement(false, false, false, false);
+                            AntiStuck.antistuckOn = true;
+                            enter(State.FARM_ROW);
+                            return;
+                        }
+                    } else {
+                        blockedRows = 0;
+                        // After a few good rows, being stuck again gets another walk-back try
+                        if (walkBackUsed && ++goodRowsSinceWalkBack >= 3) {
+                            walkBackUsed = false;
+                        }
+                        debug("row end after " + format(along) + " blocks strafing " + strafeName(strafeLeft) + (justLanded ? " (just landed)" : ""));
                     }
                     if (AIOMVigilanceConfig.setSpawnFailsafe) {
                         player.sendChatMessage("/setspawn");
@@ -141,12 +185,16 @@ public class SerpentineFarm {
                         justLanded = false;
                         rowStartedOnLayer = true;
                         strafeLeft = !strafeLeft;
+                        debug("new layer: strafing " + strafeName(strafeLeft));
                         enter(State.FARM_ROW);
                     } else {
                         // The water column up can sit one block forward/back from the end of the bottom layer's last row
                         Boolean waterForward = twoLayerLoop ? findWaterBesideRowEnd(player) : null;
                         currentShiftForward = waterForward != null ? waterForward : shiftForward;
+                        lastShiftForward = currentShiftForward;
                         shiftStart = player.getPositionVector();
+                        debug("stepping " + (currentShiftForward ? "forward (W)" : "back (S)")
+                                + (waterForward != null ? " into the water column" : " up to " + AIOMVigilanceConfig.serpentineRowShift + " blocks"));
                         enter(State.SHIFT);
                     }
                 }
@@ -157,12 +205,15 @@ public class SerpentineFarm {
                 double moved = distanceAlongLook(player, shiftStart);
                 // Release a little early, the player slides about a quarter block after letting go
                 if (moved >= AIOMVigilanceConfig.serpentineRowShift - 0.25) {
+                    debug("stepped " + format(moved) + " blocks");
                     finishShift();
                 } else if (stillTicks >= 10 && stateTicks >= 10) {
                     if (moved >= 0.5) {
                         // Walked into the next row's wall early, good enough
+                        debug("step stopped early after " + format(moved) + " blocks at " + where(player));
                         finishShift();
                     } else {
+                        debug("step blocked after " + format(moved) + " blocks at " + where(player));
                         Main.sendMarkedChatMessage("Serpentine: can't move to the next row (end of the farm?). Stopping.");
                         MacroHandler.toggleMacro();
                     }
@@ -173,9 +224,56 @@ public class SerpentineFarm {
                 setMovement(false, false, false, false);
                 if (--pauseTicks <= 0) {
                     strafeLeft = !strafeLeft;
+                    debug("strafing " + strafeName(strafeLeft));
                     enter(State.FARM_ROW);
                 }
                 break;
+
+            case WALK_BACK: {
+                setMovement(false, false, walkBackForward, !walkBackForward);
+                double walked = distanceAlongLook(player, walkBackStart);
+                // Look for an opening only after leaving the stuck spot
+                if (walked >= 0.6) {
+                    boolean leftOpen = exitOpen(player, true);
+                    boolean rightOpen = exitOpen(player, false);
+                    if (leftOpen || rightOpen) {
+                        // Which way to strafe afterwards: the setting, or towards the opening
+                        boolean nextLeft;
+                        if (AIOMVigilanceConfig.serpentineAfterWalkBackStrafe == 0) {
+                            nextLeft = true;
+                        } else if (AIOMVigilanceConfig.serpentineAfterWalkBackStrafe == 1) {
+                            nextLeft = false;
+                        } else {
+                            nextLeft = leftOpen && (!rightOpen || !strafeLeft);
+                        }
+                        blockedRows = 0;
+                        setMovement(false, false, false, false);
+
+                        if (AIOMVigilanceConfig.serpentineAfterWalkBackStep == 2) {
+                            debug("found an opening after walking back " + format(walked) + " blocks, strafing " + strafeName(nextLeft));
+                            strafeLeft = nextLeft;
+                            enter(State.FARM_ROW);
+                        } else {
+                            // Step to the next row like normal; the row after the step flips the strafe, so set the opposite now
+                            currentShiftForward = AIOMVigilanceConfig.serpentineAfterWalkBackStep == 0;
+                            lastShiftForward = currentShiftForward;
+                            strafeLeft = !nextLeft;
+                            shiftStart = player.getPositionVector();
+                            debug("found an opening after walking back " + format(walked) + " blocks: stepping "
+                                    + (currentShiftForward ? "forward (W)" : "back (S)") + ", then strafing " + strafeName(nextLeft));
+                            enter(State.SHIFT);
+                        }
+                        break;
+                    }
+                }
+                if ((stillTicks >= 20 && stateTicks >= 10) || walked > 32) {
+                    setMovement(false, false, false, false);
+                    Main.sendMarkedChatMessage("Serpentine: stuck at " + where(player)
+                            + " and walking back didn't find the row. Check Pitch/Yaw and First Row, or what's in the way. Stopping.");
+                    MacroHandler.toggleMacro();
+                }
+                break;
+            }
 
             case CLIMB:
                 setKey(Main.mc.gameSettings.keyBindJump, true);
@@ -206,6 +304,8 @@ public class SerpentineFarm {
                     if (AIOMVigilanceConfig.devmode) {
                         Main.sendMarkedChatMessage("Serpentine: back on the top layer, rows now shift " + (shiftForward ? "forward" : "back"));
                     }
+                } else if (exitTicks == 1) {
+                    debug("getting out of the water " + strafeName(exitLeft) + " at " + where(player));
                 } else if (exitTicks > 60) {
                     setKey(Main.mc.gameSettings.keyBindJump, false);
                     Main.sendMarkedChatMessage("Serpentine: couldn't get out of the water column at the top. Stopping.");
@@ -235,8 +335,21 @@ public class SerpentineFarm {
     }
 
     private static void startClimb(EntityPlayerSP player) {
+        debug("walked into the water column at " + where(player) + ", swimming up");
         // Leave the water the opposite way we came in (turning around onto the next row), or the same way
-        exitLeft = AIOMVigilanceConfig.serpentineWaterExit == 0 ? !strafeLeft : strafeLeft;
+        switch (AIOMVigilanceConfig.serpentineWaterExit) {
+            case 1:
+                exitLeft = strafeLeft;
+                break;
+            case 2:
+                exitLeft = true;
+                break;
+            case 3:
+                exitLeft = false;
+                break;
+            default:
+                exitLeft = !strafeLeft;
+        }
         climbStartY = player.posY;
         climbMaxY = player.posY;
         climbStallTicks = 0;
@@ -267,9 +380,11 @@ public class SerpentineFarm {
         return null;
     }
 
-    // Water here that carries on above head height = a column to swim up (the top of a column has air above)
+    // Water here that carries on above head height, with a floor underneath = the bottom of a column to swim up
     private static boolean isUpColumn(BlockPos feet) {
-        return isWater(feet) && isWater(feet.up(2));
+        // The way up is entered at the bottom of the column: water carrying on above, a floor below.
+        // At the top, the same column has water below too - that's the drop down, so don't climb it.
+        return isWater(feet) && isWater(feet.up(2)) && !isWater(feet.down());
     }
 
     // Horizontal distance moved sideways (along the row) relative to where the player is looking
@@ -288,6 +403,25 @@ public class SerpentineFarm {
     private static boolean isPassable(BlockPos pos) {
         IBlockState blockState = Main.mcWorld.getBlockState(pos);
         return blockState.getBlock().getCollisionBoundingBox(Main.mcWorld, pos, blockState) == null;
+    }
+
+    // Step-by-step notes in chat when Developer Mode is on (Debugging > Developer Mode)
+    private static void debug(String message) {
+        if (AIOMVigilanceConfig.devmode) {
+            Main.sendMarkedChatMessage("§7[Serpentine] " + message);
+        }
+    }
+
+    private static String strafeName(boolean left) {
+        return left ? "left (A)" : "right (D)";
+    }
+
+    private static String where(EntityPlayerSP player) {
+        return (int) Math.floor(player.posX) + " " + (int) Math.floor(player.posY) + " " + (int) Math.floor(player.posZ);
+    }
+
+    private static String format(double blocks) {
+        return String.format("%.1f", blocks);
     }
 
     private static void finishShift() {

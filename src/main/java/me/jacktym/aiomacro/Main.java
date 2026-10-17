@@ -158,6 +158,7 @@ public class Main {
         registry.add(new SerpentineFarm());
         registry.add(new PumpkinMelon());
         registry.add(new DiscordBot());
+        registry.add(new ActivityTracker());
         registry.add(new RemoteMovement());
         registry.add(new me.jacktym.aiomacro.rendering.InventoryPreview());
         registry.add(new AntiStuck());
